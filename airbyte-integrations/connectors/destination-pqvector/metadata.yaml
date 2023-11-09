@@ -1,7 +1,7 @@
 data:
   allowedHosts:
     hosts:
-      - TODO # Please change to the hostname of the source.
+    - TODO # Please change to the hostname of the source.
   registries:
     oss:
       enabled: false
@@ -16,15 +16,15 @@ data:
   connectorType: destination
   definitionId: 7f8dad3d-f7ab-408b-b333-bbae62207852
   dockerImageTag: 0.1.0
-  dockerRepository: airbyte/destination-pqvector
-  githubIssueLabel: destination-pqvector
-  icon: pqvector.svg
+  dockerRepository: airbyte/destination-pgvector
+  githubIssueLabel: destination-pgvector
+  icon: pgvector.svg
   license: MIT
-  name: Pqvector
+  name: pgvector
   releaseDate: TODO
   releaseStage: alpha
   supportLevel: community
-  documentationUrl: https://docs.airbyte.com/integrations/destinations/pqvector
+  documentationUrl: https://docs.airbyte.com/integrations/destinations/pgvector
   tags:
-    - language:python
+  - language:python
 metadataSpecVersion: "1.0"

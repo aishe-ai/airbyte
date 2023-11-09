@@ -5,7 +5,7 @@
 
 import sys
 
-from destination_pqvector import DestinationPqvector
+from destination_pgvector import Destinationpgvector
 
 if __name__ == "__main__":
-    DestinationPqvector().run(sys.argv[1:])
+    Destinationpgvector().run(sys.argv[1:])

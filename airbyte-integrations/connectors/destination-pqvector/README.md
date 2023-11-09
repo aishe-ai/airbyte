@@ -1,7 +1,6 @@
-# Pqvector Destination
-
-This is the repository for the Pqvector destination connector, written in Python.
-For information about how to use this connector within Airbyte, see [the documentation](https://docs.airbyte.com/integrations/destinations/pqvector).
+# pgvector Destination
+This is the repository for the pgvector destination connector, written in Python.
+For information about how to use this connector within Airbyte, see [the documentation](https://docs.airbyte.com/integrations/destinations/pgvector).
 
 ## Local development
 
@@ -31,12 +30,12 @@ should work as you expect.
 
 
 #### Create credentials
-**If you are a community contributor**, follow the instructions in the [documentation](https://docs.airbyte.com/integrations/destinations/pqvector)
-to generate the necessary credentials. Then create a file `secrets/config.json` conforming to the `destination_pqvector/spec.json` file.
+**If you are a community contributor**, follow the instructions in the [documentation](https://docs.airbyte.com/integrations/destinations/pgvector)
+to generate the necessary credentials. Then create a file `secrets/config.json` conforming to the `destination_pgvector/spec.json` file.
 Note that the `secrets` directory is gitignored by default, so there is no danger of accidentally checking in sensitive information.
 See `integration_tests/sample_config.json` for a sample config file.
 
-**If you are an Airbyte core member**, copy the credentials in Lastpass under the secret name `destination pqvector test creds`
+**If you are an Airbyte core member**, copy the credentials in Lastpass under the secret name `destination pgvector test creds`
 and place them into `secrets/config.json`.
 
 ### Locally running the connector
@@ -55,9 +54,9 @@ You can follow install instructions [here](https://github.com/airbytehq/airbyte/
 Then running the following command will build your connector:
 
 ```bash
-airbyte-ci connectors --name destination-pqvector build
+airbyte-ci connectors --name destination-pgvector build
 ```
-Once the command is done, you will find your connector image in your local docker registry: `airbyte/destination-pqvector:dev`.
+Once the command is done, you will find your connector image in your local docker registry: `airbyte/destination-pgvector:dev`.
 
 ##### Customizing our build process
 When contributing on our connector you might need to customize the build process to add a system dependency or set an env var.
@@ -94,7 +93,7 @@ If you would like to patch our connector and build your own a simple approach wo
 
 1. Create your own Dockerfile based on the latest version of the connector image.
 ```Dockerfile
-FROM airbyte/destination-pqvector:latest
+FROM airbyte/destination-pgvector:latest
 
 COPY . ./airbyte/integration_code
 RUN pip install ./airbyte/integration_code
@@ -107,17 +106,17 @@ Please use this as an example. This is not optimized.
 
 2. Build your image:
 ```bash
-docker build -t airbyte/destination-pqvector:dev .
+docker build -t airbyte/destination-pgvector:dev .
 # Running the spec command against your patched connector
-docker run airbyte/destination-pqvector:dev spec
+docker run airbyte/destination-pgvector:dev spec
 ````
 #### Run
 Then run any of the connector commands as follows:
 ```
-docker run --rm airbyte/destination-pqvector:dev spec
-docker run --rm -v $(pwd)/secrets:/secrets airbyte/destination-pqvector:dev check --config /secrets/config.json
+docker run --rm airbyte/destination-pgvector:dev spec
+docker run --rm -v $(pwd)/secrets:/secrets airbyte/destination-pgvector:dev check --config /secrets/config.json
 # messages.jsonl is a file containing line-separated JSON representing AirbyteMessages
-cat messages.jsonl | docker run --rm -v $(pwd)/secrets:/secrets -v $(pwd)/integration_tests:/integration_tests airbyte/destination-pqvector:dev write --config /secrets/config.json --catalog /integration_tests/configured_catalog.json
+cat messages.jsonl | docker run --rm -v $(pwd)/secrets:/secrets -v $(pwd)/integration_tests:/integration_tests airbyte/destination-pgvector:dev write --config /secrets/config.json --catalog /integration_tests/configured_catalog.json
 ```
 ## Testing
    Make sure to familiarize yourself with [pytest test discovery](https://docs.pytest.org/en/latest/goodpractices.html#test-discovery) to know how your test files and methods should be named.

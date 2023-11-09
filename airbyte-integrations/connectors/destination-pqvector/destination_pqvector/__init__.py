@@ -3,6 +3,6 @@
 #
 
 
-from .destination import DestinationPqvector
+from .destination import Destinationpgvector
 
-__all__ = ["DestinationPqvector"]
+__all__ = ["Destinationpgvector"]

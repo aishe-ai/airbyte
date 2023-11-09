@@ -1,7 +1,7 @@
 data:
   allowedHosts:
     hosts:
-    - TODO # Please change to the hostname of the source.
+      - TODO # Please change to the hostname of the source.
   registries:
     oss:
       enabled: false
@@ -14,17 +14,17 @@ data:
     baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
   connectorSubtype: database
   connectorType: destination
-  definitionId: 7f8dad3d-f7ab-408b-b333-bbae62207852
+  definitionId: 869b2908-4a91-440e-b135-8ae6879f05be
   dockerImageTag: 0.1.0
   dockerRepository: airbyte/destination-pgvector
   githubIssueLabel: destination-pgvector
   icon: pgvector.svg
   license: MIT
-  name: pgvector
+  name: Pgvector
   releaseDate: TODO
   releaseStage: alpha
   supportLevel: community
   documentationUrl: https://docs.airbyte.com/integrations/destinations/pgvector
   tags:
-  - language:python
+    - language:python
 metadataSpecVersion: "1.0"

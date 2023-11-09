@@ -13,7 +13,7 @@ TEST_REQUIREMENTS = ["pytest~=6.2"]
 
 setup(
     name="destination_pgvector",
-    description="Destination implementation for pgvector.",
+    description="Destination implementation for Pgvector.",
     author="Airbyte",
     author_email="contact@airbyte.io",
     packages=find_packages(),

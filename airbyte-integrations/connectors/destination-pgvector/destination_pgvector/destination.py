@@ -10,10 +10,11 @@ from airbyte_cdk.destinations import Destination
 from airbyte_cdk.models import AirbyteConnectionStatus, AirbyteMessage, ConfiguredAirbyteCatalog, Status
 
 
-class Destinationpgvector(Destination):
+class DestinationPgvector(Destination):
     def write(
         self, config: Mapping[str, Any], configured_catalog: ConfiguredAirbyteCatalog, input_messages: Iterable[AirbyteMessage]
     ) -> Iterable[AirbyteMessage]:
+
         """
         TODO
         Reads the input stream of messages, config, and catalog to write data to the destination.

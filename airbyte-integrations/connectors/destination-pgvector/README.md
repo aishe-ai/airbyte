@@ -1,5 +1,6 @@
-# pgvector Destination
-This is the repository for the pgvector destination connector, written in Python.
+# Pgvector Destination
+
+This is the repository for the Pgvector destination connector, written in Python.
 For information about how to use this connector within Airbyte, see [the documentation](https://docs.airbyte.com/integrations/destinations/pgvector).
 
 ## Local development

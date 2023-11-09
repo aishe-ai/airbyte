@@ -1,0 +1,30 @@
+data:
+  allowedHosts:
+    hosts:
+      - TODO # Please change to the hostname of the source.
+  registries:
+    oss:
+      enabled: false
+    cloud:
+      enabled: false
+  connectorBuildOptions:
+    # Please update to the latest version of the connector base image.
+    # Please use the full address with sha256 hash to guarantee build reproducibility.
+    # https://hub.docker.com/r/airbyte/python-connector-base
+    baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
+  connectorSubtype: database
+  connectorType: destination
+  definitionId: 7f8dad3d-f7ab-408b-b333-bbae62207852
+  dockerImageTag: 0.1.0
+  dockerRepository: airbyte/destination-pqvector
+  githubIssueLabel: destination-pqvector
+  icon: pqvector.svg
+  license: MIT
+  name: Pqvector
+  releaseDate: TODO
+  releaseStage: alpha
+  supportLevel: community
+  documentationUrl: https://docs.airbyte.com/integrations/destinations/pqvector
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"

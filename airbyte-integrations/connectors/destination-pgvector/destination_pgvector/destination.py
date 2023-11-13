@@ -78,13 +78,12 @@ class DestinationPgvector(Destination):
         """
         try:
             # Create an SQLAlchemy engine
-            engine = migrate()
+            engine = migrate(config)
 
             # Try to connect to the database and check for vector extension
             with engine.connect() as conn:
                 # Check the existence of the vector extension
                 result = conn.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'"))
-                print(result)
                 if result.rowcount == 0:
                     raise RuntimeError("The 'vector' extension is not installed in the PostgreSQL database.")
 

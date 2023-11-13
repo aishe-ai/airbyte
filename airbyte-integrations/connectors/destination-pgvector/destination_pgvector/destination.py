@@ -14,13 +14,17 @@ from airbyte_cdk.models import (
     ConnectorSpecification,
     DestinationSyncMode,
     Status,
+    Type,
 )
 
+
+from sqlmodel import Session
 from sqlalchemy import text
 
 
 from destination_pgvector.config import ConfigModel
 from destination_pgvector.database import migrate
+from destination_pgvector.data_model import *
 
 
 class DestinationPgvector(Destination):
@@ -43,7 +47,39 @@ class DestinationPgvector(Destination):
         :return: Iterable of AirbyteStateMessages wrapped in AirbyteMessage structs
         """
 
+        engine = migrate(config)
+
+        print(config, configured_catalog)
+
+        # Iterate over incoming messages
+        for message in input_messages:
+            print("\n --->", message)
+            if message.type == Type.RECORD:
+                self.insert_record(message, engine)
+
+            elif message.type == Type.STATE:
+                # State message indicates all previous records have been written
+                # Only emit the state message here if you have a guarantee the previous records are written
+                yield message
+
+    def insert_record(self, message: AirbyteMessage, engine):
         pass
+        # You would implement your insert logic here using SQLModel and switch cases
+        # with Session(engine) as session:
+        #     # Map the record to your SQLModel class (e.g., YourRecordModel)
+        #     record = YourRecordModel(**message.record.data)  # Transform the Airbyte record to your SQLModel instance
+
+        #     # Add the record instance to the session and commit
+        #     # Ensure your model instances match with your table structures and columns
+        #     try:
+        #         session.add(record)
+        #         session.commit()
+        #     except Exception as e:
+        #         session.rollback()  # Rollback if any error occurs
+        #         # Here you should handle the error (e.g., log to AirbyteLogger, raise a specific exception, etc.)
+
+    # Note: Make sure the models in your_data_models.py are defined correctly to match the schema of the destination tables.
+    # This code does not handle specific schema issues, dependencies between tables, or advanced use cases like upserting.
 
     def check(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> AirbyteConnectionStatus:
         """

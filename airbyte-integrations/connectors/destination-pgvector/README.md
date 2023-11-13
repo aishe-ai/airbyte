@@ -45,6 +45,7 @@ python main.py spec
 python main.py check --config secrets/config.json
 python main.py discover --config secrets/config.json
 python main.py read --config secrets/config.json --catalog integration_tests/configured_catalog.json
+python main.py write --config secrets/config.json --catalog integration_tests/configured_catalog.json
 ```
 
 ### Locally running the connector docker image
@@ -114,6 +115,7 @@ docker run airbyte/destination-pgvector:dev spec
 #### Run
 Then run any of the connector commands as follows:
 ```
+-> cat test_data/messages.jsonl | python main.py write --config secrets/config.json --catalog test_data/configured_catalog.json
 docker run --rm airbyte/destination-pgvector:dev spec
 docker run --rm -v $(pwd)/secrets:/secrets airbyte/destination-pgvector:dev check --config /secrets/config.json
 # messages.jsonl is a file containing line-separated JSON representing AirbyteMessages

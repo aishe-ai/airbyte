@@ -14,32 +14,24 @@ from airbyte_cdk.destinations.vector_db_based.config import (
     ProcessingConfigModel,
 )
 from airbyte_cdk.utils.spec_schema_transformations import resolve_refs
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 
-class PineconeIndexingModel(BaseModel):
-    pinecone_key: str = Field(
-        ...,
-        title="Pinecone API key",
-        airbyte_secret=True,
-        description="The Pinecone API key to use matching the environment (copy from Pinecone console)",
+class DatabaseConfigModel(BaseModel):
+    host: str = Field(..., title="Host", description="The host address of the database.")
+    port: int = Field(default=5432, title="Port", description="The port number on which the database server is running.")
+    database: str = Field(..., title="Name", description="The name of the database.")
+    username: str = Field(..., title="Username", description="The username used to authenticate with the database.")
+    password: SecretStr = Field(
+        ..., title="Password", airbyte_secret=True, description="The password used to authenticate with the database."
     )
-    pinecone_environment: str = Field(
-        ..., title="Pinecone Environment", description="Pinecone Cloud environment to use", examples=["us-west1-gcp", "gcp-starter"]
-    )
-    index: str = Field(..., title="Index", description="Pinecone index in your project to load data into")
 
     class Config:
-        title = "Indexing"
-        schema_extra = {
-            "description": "Pinecone is a popular vector store that can be used to store and retrieve embeddings.",
-            "group": "indexing",
-        }
+        schema_extra = {"group": "database"}
 
 
 class ConfigModel(BaseModel):
-    # indexing: PineconeIndexingModel
-
+    database: DatabaseConfigModel
     embedding: Union[
         OpenAIEmbeddingConfigModel,
         CohereEmbeddingConfigModel,
@@ -53,9 +45,9 @@ class ConfigModel(BaseModel):
         title = "Pinecone Destination Config"
         schema_extra = {
             "groups": [
+                {"id": "database", "title": "Datebase Config"},
                 {"id": "processing", "title": "Processing"},
                 {"id": "embedding", "title": "Embedding"},
-                {"id": "indexing", "title": "Indexing"},
             ]
         }
 

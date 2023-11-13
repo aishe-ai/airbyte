@@ -1,4 +1,11 @@
 {
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "mydatabase",
+    "username": "myusername",
+    "password": "mypassword"
+  },
   "embedding": {
     "mode": "openai_compatible",
     "api_key": "your_openai_compatible_service_api_key",

@@ -1,9 +1,8 @@
 import pytest
 import os
-import logging
 
 from dotenv import load_dotenv
-from sqlmodel import create_engine, Session, SQLModel
+from sqlmodel import Session, SQLModel
 from sqlalchemy.exc import OperationalError
 
 # Load environment variables from the root .env file
@@ -13,28 +12,16 @@ load_dotenv(dotenv_path)
 
 # Import your SQLModel classes from the data_model module
 from destination_pgvector.data_model import *  # This assumes your SQLModel classes are defined in data_model.py
+from destination_pgvector.database import migrate
 
 
 # Define the pytest fixture for setting up the test database
 @pytest.fixture(scope="module")
 def setup_database():
-    # Construct the database URL using environment variables
-    postgres_user = os.environ.get("POSTGRES_USER")
-    postgres_password = os.environ.get("POSTGRES_PASSWORD")
-    postgres_database = os.environ.get("POSTGRES_DATABASE")
-    postgres_host = os.environ.get("POSTGRES_HOST")
-
-    if not all([postgres_user, postgres_password, postgres_database, postgres_host]):
-        pytest.fail("One or more required environment variables are not set.")
-
-    test_database_url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_database}"
-
     # Set up the test database and create tables
-    engine = create_engine(test_database_url)
-    SQLModel.metadata.create_all(engine)
+    engine = migrate()
 
     # Perform any additional setup actions required by the Airbyte destination
-
     yield engine
 
     # Clean up the test database

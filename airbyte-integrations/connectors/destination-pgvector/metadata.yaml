@@ -1,7 +1,9 @@
 data:
   allowedHosts:
     hosts:
-      - TODO # Please change to the hostname of the source.
+      - api.openai.com
+      - api.cohere.ai
+      - ${embedding.api_base}
   registries:
     oss:
       enabled: false
@@ -21,8 +23,14 @@ data:
   icon: pgvector.svg
   license: MIT
   name: Pgvector
-  releaseDate: TODO
+  releaseDate: 2023-11-13
   releaseStage: alpha
+  resourceRequirements:
+    jobSpecific:
+      - jobType: sync
+        resourceRequirements:
+          memory_limit: 2Gi
+          memory_request: 2Gi
   supportLevel: community
   documentationUrl: https://docs.airbyte.com/integrations/destinations/pgvector
   tags:

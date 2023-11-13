@@ -5,7 +5,17 @@
 
 from setuptools import find_packages, setup
 
-MAIN_REQUIREMENTS = ["airbyte-cdk", "langchain"]
+MAIN_REQUIREMENTS = [
+    "airbyte-cdk",
+    "langchain",
+    "sqlmodel",
+    "pydantic",
+    "psycopg2-binary",
+    "python-dotenv",
+    "pytest",
+    "pydantic[email]",
+    "sqlalchemy<2.0",
+]
 
 TEST_REQUIREMENTS = ["pytest~=6.2"]
 

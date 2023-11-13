@@ -1,0 +1,45 @@
+# Local development directories
+.venv/
+env/
+venv/
+
+# Python byte-compiled files and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Version control
+.git/
+.gitignore
+
+# Test directories and files
+tests/
+integration_tests/
+unit_tests/
+*test.py
+*tests.py
+test_*.py
+*_test.py
+test/
+pytest.ini
+
+# Documentation and examples
+*.md
+examples/
+LICENSE
+
+# Credentials and secrets
+secrets/
+*.key
+*.pem

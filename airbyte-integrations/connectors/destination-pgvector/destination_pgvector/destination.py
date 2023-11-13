@@ -16,7 +16,11 @@ from airbyte_cdk.models import (
     Status,
 )
 
+from sqlalchemy import text
+
+
 from destination_pgvector.config import ConfigModel
+from destination_pgvector.database import migrate
 
 
 class DestinationPgvector(Destination):
@@ -41,6 +45,25 @@ class DestinationPgvector(Destination):
 
         pass
 
+    # def check(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> AirbyteConnectionStatus:
+    #     """
+    #     Tests if the input configuration can be used to successfully connect to the destination with the needed permissions
+    #         e.g: if a provided API token or password can be used to connect and write to the destination.
+
+    #     :param logger: Logging object to display debug/info/error to the logs
+    #         (logs will not be accessible via airbyte UI if they are not passed to this logger)
+    #     :param config: Json object containing the configuration of this destination, content of this json is as specified in
+    #     the properties of the spec.json file
+
+    #     :return: AirbyteConnectionStatus indicating a Success or Failure
+    #     """
+    #     try:
+    #         # TODO
+
+    #         return AirbyteConnectionStatus(status=Status.SUCCEEDED)
+    #     except Exception as e:
+    #         return AirbyteConnectionStatus(status=Status.FAILED, message=f"An exception occurred: {repr(e)}")
+
     def check(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> AirbyteConnectionStatus:
         """
         Tests if the input configuration can be used to successfully connect to the destination with the needed permissions
@@ -54,10 +77,24 @@ class DestinationPgvector(Destination):
         :return: AirbyteConnectionStatus indicating a Success or Failure
         """
         try:
-            # TODO
+            # Create an SQLAlchemy engine
+            engine = migrate()
 
+            # Try to connect to the database and check for vector extension
+            with engine.connect() as conn:
+                # Check the existence of the vector extension
+                result = conn.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'"))
+                print(result)
+                if result.rowcount == 0:
+                    raise RuntimeError("The 'vector' extension is not installed in the PostgreSQL database.")
+
+            # If the connection is successful and the 'vector' extension exists, return success status
+            logger.info("Successfully connected to the PostgreSQL database with the 'vector' extension installed.")
             return AirbyteConnectionStatus(status=Status.SUCCEEDED)
+
         except Exception as e:
+            # If there was an error during the connection attempt, log the error and return failure status
+            logger.error(f"An exception occurred while trying to connect to the PostgreSQL database: {e}")
             return AirbyteConnectionStatus(status=Status.FAILED, message=f"An exception occurred: {repr(e)}")
 
     def spec(self, *args: Any, **kwargs: Any) -> ConnectorSpecification:

@@ -117,23 +117,3 @@ class Membership(SQLModel, table=True):
 
     document_uuid: UUID4 = Field(foreign_key="document.uuid")
     document: Document = Relationship(back_populates="memberships")
-
-
-def create_vector_extension(engine):
-    """Creates the 'vector' PostgreSQL extension if it doesn't exist."""
-    with engine.begin() as connection:  # Use 'begin' to auto-commit
-        connection.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-
-
-def create_tables(database_url: str):
-    """
-    Creates the 'vector' extension and database tables for all SQLModel classes.
-    """
-    engine = create_engine(database_url)
-
-    # Create 'vector' extension
-    create_vector_extension(engine)
-
-    # Create tables
-    with engine.begin() as connection:  # Use 'begin' to auto-commit
-        SQLModel.metadata.create_all(connection)

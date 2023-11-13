@@ -2,7 +2,10 @@ import os
 import logging
 
 from dotenv import load_dotenv
+
 from sqlmodel import create_engine, SQLModel
+from sqlalchemy import text
+
 
 # Load environment variables from the root .env file
 root_dir = os.path.dirname(os.path.dirname(__file__))  # Get the root directory
@@ -29,7 +32,12 @@ def get_engine():
 
 def migrate():
     engine = get_engine()
-    SQLModel.metadata.create_all(engine)
+
+    # Create tables
+    with engine.begin() as connection:  # Use 'begin' to auto-commit
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        SQLModel.metadata.create_all(connection)
+
     logging.info("Created all needed tables")
 
     return engine

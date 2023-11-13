@@ -7,14 +7,22 @@ from typing import Any, Iterable, Mapping
 
 from airbyte_cdk import AirbyteLogger
 from airbyte_cdk.destinations import Destination
-from airbyte_cdk.models import AirbyteConnectionStatus, AirbyteMessage, ConfiguredAirbyteCatalog, Status
+from airbyte_cdk.models import (
+    AirbyteConnectionStatus,
+    AirbyteMessage,
+    ConfiguredAirbyteCatalog,
+    ConnectorSpecification,
+    DestinationSyncMode,
+    Status,
+)
+
+from destination_pgvector.config import ConfigModel
 
 
 class DestinationPgvector(Destination):
     def write(
         self, config: Mapping[str, Any], configured_catalog: ConfiguredAirbyteCatalog, input_messages: Iterable[AirbyteMessage]
     ) -> Iterable[AirbyteMessage]:
-
         """
         TODO
         Reads the input stream of messages, config, and catalog to write data to the destination.
@@ -51,3 +59,13 @@ class DestinationPgvector(Destination):
             return AirbyteConnectionStatus(status=Status.SUCCEEDED)
         except Exception as e:
             return AirbyteConnectionStatus(status=Status.FAILED, message=f"An exception occurred: {repr(e)}")
+
+    def spec(self, *args: Any, **kwargs: Any) -> ConnectorSpecification:
+        return ConnectorSpecification(
+            # documentationUrl="",
+            documentationUrl="https://docs.airbyte.com/integrations/destinations/pgvector",
+            supportsIncremental=True,
+            # supported_destination_sync_modes=[DestinationSyncMode.overwrite, DestinationSyncMode.append, DestinationSyncMode.append_dedup],
+            supported_destination_sync_modes=[DestinationSyncMode.overwrite],
+            connectionSpecification=ConfigModel.schema(),
+        )

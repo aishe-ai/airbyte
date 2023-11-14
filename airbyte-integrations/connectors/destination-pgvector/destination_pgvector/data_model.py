@@ -1,50 +1,17 @@
 from typing import List, Optional
 
-from sqlmodel import Field, Relationship, SQLModel, create_engine
+from sqlmodel import Field, Relationship, SQLModel
 
-from sqlalchemy.dialects.postgresql import JSONB, BYTEA
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import UserDefinedType
 from sqlalchemy import func, cast, Numeric, Column
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from sqlalchemy.sql.expression import bindparam
 
+from pgvector.sqlalchemy import Vector
+
 from pydantic import UUID4, EmailStr
-
-
-class PgVector(UserDefinedType):
-    """A custom SQLAlchemy type for PGVector PostgreSQL type."""
-
-    def get_col_spec(self, **kwargs):
-        return "vector"
-
-    def bind_expression(self, bindvalue):
-        # Serialize the bindvalue for insertion into the database.
-        # This should convert from a Python structure into a pgvector-compatible format.
-        # raise NotImplementedError("bind_expression not implemented for pgvector")
-        # pass
-        return func.array_to_vector(cast(bindparam(bindvalue, expanding=True), ARRAY(Numeric)))
-
-    def column_expression(self, col):
-        # Deserialize the column value fetched from the database.
-        # This should convert from a pgvector-compatible format into a Python structure.
-        raise NotImplementedError("column_expression not implemented for pgvector")
-
-    def bind_processor(self, dialect):
-        # Process the internally serialized value before sending to the database.
-        def process(value):
-            # Further processing might be necessary here
-            return value
-
-        return process
-
-    def result_processor(self, dialect, coltype):
-        # Process the result value fetched from the database.
-        def process(value):
-            # Convert into a Python list or numpy array as needed
-            return value
-
-        return process
 
 
 # Define the Organizations SQLModel with its attributes.
@@ -95,9 +62,7 @@ class Document(SQLModel, table=True):
     description: Optional[str] = None
     url: str
     context_data: dict = Field(sa_column=Column(JSONB))
-    # embeddings: list = Field(sa_column=Column(PgVector))
-
-    # embeddings: Any  # This type will depend on what you mean by "vector[]", which isn't a standard SQL type
+    embedding: List[float] = Field(sa_column=Column(Vector(None)))
     content: str
 
     # Foreign key relation to DataSources.

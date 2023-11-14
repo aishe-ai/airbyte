@@ -1,24 +1,2 @@
-{
-  "type": "RECORD",
-  "record": {
-    "stream": "confluence_pages",
-    "data": {
-      "title": "Page Title",
-      "content": "Page content or other relevant field from Confluence",
-      "last_modified": "Last modified timestamp"
-    },
-    "emitted_at": 1625383200000
-  }
-}
-{
-  "type": "RECORD",
-  "record": {
-    "stream": "confluence_pages",
-    "data": {
-      "title": "Another Page Title",
-      "content": "Content of another page",
-      "last_modified": "Last modified timestamp"
-    },
-    "emitted_at": 1625383200000
-  }
-}
+{"type": "RECORD", "record": {"stream": "example_stream", "data": { "title": "value1", "field2": "value2" }, "emitted_at": 1625383200000}}
+{"type": "RECORD", "record": {"stream": "example_stream", "data": { "title": "value2", "field2": "value2" }, "emitted_at": 1625383200000}}

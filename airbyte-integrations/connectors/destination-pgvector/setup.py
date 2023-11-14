@@ -15,6 +15,8 @@ MAIN_REQUIREMENTS = [
     "pytest",
     "pydantic[email]",
     "sqlalchemy<2.0",
+    "pgvector",
+    "airbyte-cdk[vector-db-based]==0.51.41",
 ]
 
 TEST_REQUIREMENTS = ["pytest~=6.2"]

@@ -18,36 +18,37 @@ class PGVectorWriter(Writer):
     #     # Override the existing method with custom logic
     #     super()._process_batch()
 
-    # def _process_batch(self) -> None:
-    #     for (namespace, stream), ids in self.ids_to_delete.items():
-    #         self.indexer.delete(ids, namespace, stream)
+    def _process_batch(self) -> None:
+        # for (namespace, stream), ids in self.ids_to_delete.items():
+        #     self.indexer.delete(ids, namespace, stream)
 
-    #     for (namespace, stream), documents in self.documents.items():
-    #         embeddings = self.embedder.embed_chunks(documents)
-    #         for i, document in enumerate(documents):
-    #             document.embedding = embeddings[i]
-    #         self.indexer.index(documents, namespace, stream)
+        for (namespace, stream), documents in self.documents.items():
+            embeddings = self.embedder.embed_chunks(documents)
+            for i, document in enumerate(documents):
+                document.embedding = embeddings[i]
+            # self.indexer.index(documents, namespace, stream)
 
-    #     self._init_batch()
+        self._init_batch()
 
     def write(self, configured_catalog: ConfiguredAirbyteCatalog, input_messages: Iterable[AirbyteMessage]) -> Iterable[AirbyteMessage]:
         print("hello")
         self.processor = DocumentProcessor(self.processing_config, configured_catalog)
-        self.indexer.pre_sync(configured_catalog)
+        # self.indexer.pre_sync(configured_catalog)
+        # print(input_messages)
         for message in input_messages:
             if message.type == Type.STATE:
                 # Emitting a state message indicates that all records which came before it have been written to the destination. So we flush
                 # the queue to ensure writes happen, then output the state message to indicate it's safe to checkpoint state
-                # self._process_batch()
+                self._process_batch()
                 yield message
-            # elif message.type == Type.RECORD:
-            #     record_documents, record_id_to_delete = self.processor.process(message.record)
-            #     self.documents[(message.record.namespace, message.record.stream)].extend(record_documents)
-            #     if record_id_to_delete is not None:
-            #         self.ids_to_delete[(message.record.namespace, message.record.stream)].append(record_id_to_delete)
-            #     self.number_of_documents += len(record_documents)
-            #     if self.number_of_documents >= self.batch_size:
-            #         self._process_batch()
+            elif message.type == Type.RECORD:
+                record_documents, record_id_to_delete = self.processor.process(message.record)
+                self.documents[(message.record.namespace, message.record.stream)].extend(record_documents)
+                if record_id_to_delete is not None:
+                    self.ids_to_delete[(message.record.namespace, message.record.stream)].append(record_id_to_delete)
+                self.number_of_documents += len(record_documents)
+                if self.number_of_documents >= self.batch_size:
+                    self._process_batch()
 
         self._process_batch()
-        yield from self.indexer.post_sync()
+        # yield from self.indexer.post_sync()

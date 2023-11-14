@@ -1,9 +1,13 @@
 from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel, create_engine
-from sqlalchemy import Column
+
 from sqlalchemy.dialects.postgresql import JSONB, BYTEA
 from sqlalchemy.types import UserDefinedType
+from sqlalchemy import func, cast, Numeric, Column
+from sqlalchemy.dialects.postgresql import ARRAY
+
+from sqlalchemy.sql.expression import bindparam
 
 from pydantic import UUID4, EmailStr
 
@@ -17,7 +21,9 @@ class PgVector(UserDefinedType):
     def bind_expression(self, bindvalue):
         # Serialize the bindvalue for insertion into the database.
         # This should convert from a Python structure into a pgvector-compatible format.
-        raise NotImplementedError("bind_expression not implemented for pgvector")
+        # raise NotImplementedError("bind_expression not implemented for pgvector")
+        # pass
+        return func.array_to_vector(cast(bindparam(bindvalue, expanding=True), ARRAY(Numeric)))
 
     def column_expression(self, col):
         # Deserialize the column value fetched from the database.
@@ -89,7 +95,7 @@ class Document(SQLModel, table=True):
     description: Optional[str] = None
     url: str
     context_data: dict = Field(sa_column=Column(JSONB))
-    embeddings: list = Field(sa_column=Column(PgVector))
+    # embeddings: list = Field(sa_column=Column(PgVector))
 
     # embeddings: Any  # This type will depend on what you mean by "vector[]", which isn't a standard SQL type
     content: str

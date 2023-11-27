@@ -12,58 +12,24 @@ from airbyte_cdk.destinations.vector_db_based.utils import create_stream_identif
 from airbyte_cdk.models import ConfiguredAirbyteCatalog
 from airbyte_cdk.models.airbyte_protocol import DestinationSyncMode
 from chromadb.config import Settings
-from destination_chroma.config import ChromaIndexingConfigModel
+
+
+from destination_pgvector.config import ConfigModel
 from destination_chroma.utils import is_valid_collection_name
 
 
+# Problem: one document table for all customers doesnt allow different indixes per customer
+# -> partial paritioning or extra table
+# each document_source needs its own table for its document and the specifiy embedding index
 class PGVectorIndexer(Indexer):
-    def __init__(self, config: ChromaIndexingConfigModel):
+    # indexing=IVFFlatIndexingModel(mode='ivfflat') database=DatabaseConfigModel(host='localhost', port=5432, database='aisheAI', username='aisheAI', password=SecretStr('**********')) embedding=OpenAIEmbeddingConfigModel(mode='openai', openai_key='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') processing=ProcessingConfigModel(chunk_size=1024, chunk_overlap=0, text_fields=['title', 'content.body'], metadata_fields=['author', 'publish_date'], text_splitter=SeparatorSplitterConfigModel(mode='separator', separators=['"\\n\\n"', '"\\n"', '" "', '"."'], keep_separator=False), field_name_mappings=[])
+    def __init__(self, config: ConfigModel):
         super().__init__(config)
+        # TODO: Store needed data in object, db_params, indexing
         self.collection_name = config.collection_name
 
-    def check(self):
-        collection_name_validation_error = is_valid_collection_name(self.collection_name)
-        if collection_name_validation_error:
-            return collection_name_validation_error
-
-        auth_method = self.config.auth_method
-        if auth_method.mode == "persistent_client" and not auth_method.path.startswith("/local/"):
-            return "Path must be prefixed with /local"
-
-        client = self._get_client()
-        try:
-            heartbeat = client.heartbeat()
-            if not heartbeat:
-                return "Chroma client server is not alive"
-            collection = client.get_or_create_collection(name=self.collection_name)
-            count = collection.count()
-            if count != 0 and not count:
-                return f"unable to get or create collection with name {self.collection_name}"
-            return
-        except Exception as e:
-            return format_exception(e)
-        finally:
-            del client
-
-    def delete(self, delete_ids, namespace, stream):
-        if len(delete_ids) > 0:
-            self._delete_by_filter(field_name=METADATA_RECORD_ID_FIELD, field_values=delete_ids)
-
-    def index(self, document_chunks, namespace, stream):
-        entities = []
-        for i in range(len(document_chunks)):
-            chunk = document_chunks[i]
-            entities.append(
-                {
-                    "id": str(uuid.uuid4()),
-                    "embedding": chunk.embedding,
-                    "metadata": self._normalize(chunk.metadata),
-                    "document": chunk.page_content,
-                }
-            )
-        self._write_data(entities)
-
     def pre_sync(self, catalog: ConfiguredAirbyteCatalog) -> None:
+        # check compatibilty between config and current state
         self.client = self._get_client()
         streams_to_overwrite = [
             create_stream_identifier(stream.stream)
@@ -73,56 +39,49 @@ class PGVectorIndexer(Indexer):
         if len(streams_to_overwrite):
             self._delete_by_filter(field_name=METADATA_STREAM_FIELD, field_values=streams_to_overwrite)
 
-    def _get_client(self):
-        auth_method = self.config.auth_method
-        if auth_method.mode == "persistent_client":
-            path = auth_method.path
-            client = chromadb.PersistentClient(path=path)
-            return client
+    # def post_sync(self) -> List[AirbyteMessage]:
+    #     """
+    #     Run after the sync finishes. This method should be used to perform any cleanup operations and can return a list of AirbyteMessages to be logged.
+    #     """
+    #     return []
 
-        elif auth_method.mode == "http_client":
-            host = auth_method.host
-            port = auth_method.port
-            ssl = auth_method.ssl
-            username = auth_method.username
-            password = auth_method.password
+    def index(self, document_chunks, namespace, stream):
+        # not needed, done by db
+        """
+        Index a list of document chunks.
 
-            if username and password:
-                settings = Settings(
-                    chroma_client_auth_provider="chromadb.auth.basic.BasicAuthClientProvider",
-                    chroma_client_auth_credentials=f"{username}:{password}",
-                )
-                client = chromadb.HttpClient(settings=settings, host=host, port=port, ssl=ssl)
-            else:
-                client = chromadb.HttpClient(host=host, port=port, ssl=ssl)
-            return client
-        return
+        This method should be used to index the documents in the destination.
+        All chunks belong to the stream and namespace specified in the parameters.
+        """
+        pass
 
-    def _delete_by_filter(self, field_name, field_values):
-        collection = self.client.get_collection(name=self.collection_name)
-        where_filter = {field_name: {"$in": field_values}}
-        collection.delete(where=where_filter)
+    def delete(self, delete_ids, namespace, stream):
+        # delete document/table
+        """
+        Delete document chunks belonging to certain record ids.
 
-    def _normalize(self, metadata: dict) -> dict:
-        result = {}
-        for key, value in metadata.items():
-            if isinstance(value, (str, int, float, bool)):
-                result[key] = value
-            else:
-                # JSON encode all other types
-                result[key] = json.dumps(value)
-        return result
+        This method should be used to delete documents from the destination.
+        The delete_ids parameter contains a list of record ids - all chunks with a record id in this list should be deleted from the destination.
+        All ids belong to the stream and namespace specified in the parameters.
+        """
+        pass
 
-    def _write_data(self, entities):
-        ids = [entity["id"] for entity in entities]
-        embeddings = [entity["embedding"] for entity in entities]
-        if not any(embeddings):
-            embeddings = None
-        metadatas = [entity["metadata"] for entity in entities]
-        documents = [entity["document"] for entity in entities]
+    def check(self):
+        # TODO: Perform initial setup for database-related configurations.
+        # 0. Update sqlmodel
+        # 1. Establish and verify database connectivity:
+        #    a. Ensure the database is accessible. Check for the existence of the specific data_source document table.
+        #       Verify if the table's indexing aligns with the configurations specified in the config.
+        #       This step is crucial to ensure that the application is interacting with the correct table and that
+        #       the table is configured as expected for optimal performance and data integrity.
+        #    b. Initialize and store the database connection in an instance variable.
+        #       This connection will be used for subsequent database operations, ensuring efficient reuse of the database connection.
+        #       Storing it in an instance variable makes it readily accessible throughout the class.
 
-        collection = self.client.get_collection(name=self.collection_name)
-        collection.add(ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents)
+        """
+        Check if the indexer is configured correctly. This method should be used to check if the indexer is configured correctly and return an error message if it is not.
+        """
+        pass
 
         # engine = migrate(config)
         # SQLModel.metadata.drop_all(engine)

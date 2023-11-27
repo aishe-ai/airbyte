@@ -43,8 +43,8 @@ class DestinationPgvector(Destination):
     embedder: Embedder
 
     def _init(self, config: ConfigModel):
-        self.indexer = PGVectorIndexer(config.indexing, self.embedder.embedding_dimensions)
         self.embedder = create_from_config(config.embedding, config.processing)
+        self.indexer = PGVectorIndexer(config.indexing, self.embedder.embedding_dimensions)
 
     def write(
         self, config: Mapping[str, Any], configured_catalog: ConfiguredAirbyteCatalog, input_messages: Iterable[AirbyteMessage]

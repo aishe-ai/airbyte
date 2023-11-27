@@ -98,6 +98,7 @@ class DestinationPgvector(Destination):
 
             # embedding checks
             self._init(ConfigModel.parse_obj(config))
+            embedder_error = self.embedder.check()
             indexer_error = self.indexer.check()
             errors = [error for error in [embedder_error, indexer_error] if error is not None]
             if len(errors) > 0:

@@ -8,6 +8,8 @@ from airbyte_cdk.destinations.vector_db_based.embedder import Embedder
 from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
 from airbyte_cdk.models import AirbyteMessage, ConfiguredAirbyteCatalog, Type
 
+## currently not needed, because unused
+
 
 class PGVectorWriter(Writer):
     # def __init__(self, processing_config, indexer, embedder, batch_size) -> None:

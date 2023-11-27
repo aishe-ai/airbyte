@@ -17,6 +17,50 @@ from airbyte_cdk.utils.spec_schema_transformations import resolve_refs
 from pydantic import BaseModel, Field, SecretStr
 
 
+from pydantic import BaseModel, Field
+from typing import Literal, Union
+
+
+class BruteForceIndexingModel(BaseModel):
+    mode: Literal["brute_force"] = Field("brute_force", const=True)
+
+    class Config:
+        title = "Brute Force Indexing"
+        schema_extra = {"description": "Use brute force search without any indexing."}
+
+
+class IVFFlatIndexingModel(BaseModel):
+    mode: Literal["ivfflat"] = Field("ivfflat", const=True)
+
+    class Config:
+        title = "IVFFlat Indexing"
+        schema_extra = {"description": "Use Inverted File Indexing with a flat encoding (IVFFlat)."}
+
+
+class HNSWIndexingModel(BaseModel):
+    mode: Literal["hnsw"] = Field("hnsw", const=True)
+
+    class Config:
+        title = "HNSW Indexing"
+        schema_extra = {"description": "Use Hierarchical Navigable Small World (HNSW) indexing method."}
+
+
+class FlatIndexingModel(BaseModel):
+    mode: Literal["flat"] = Field("flat", const=True)
+
+    class Config:
+        title = "Flat Indexing"
+        schema_extra = {"description": "Use flat indexing method."}
+
+
+class LSHIndexingModel(BaseModel):
+    mode: Literal["lsh"] = Field("lsh", const=True)
+
+    class Config:
+        title = "LSH Indexing"
+        schema_extra = {"description": "Use Locality-Sensitive Hashing (LSH) indexing method."}
+
+
 class DatabaseConfigModel(BaseModel):
     host: str = Field(..., title="Host", description="The host address of the database.")
     port: int = Field(default=5432, title="Port", description="The port number on which the database server is running.")
@@ -31,6 +75,15 @@ class DatabaseConfigModel(BaseModel):
 
 
 class ConfigModel(BaseModel):
+    indexing: Union[BruteForceIndexingModel, IVFFlatIndexingModel, HNSWIndexingModel, FlatIndexingModel, LSHIndexingModel] = Field(
+        ...,
+        title="Indexing",
+        description="Indexing configuration, see [Repo](https://github.com/pgvector/pgvector#indexing)",
+        discriminator="mode",
+        group="indexing",
+        type="object",
+    )
+
     database: DatabaseConfigModel
     embedding: Union[
         OpenAIEmbeddingConfigModel,
@@ -48,6 +101,7 @@ class ConfigModel(BaseModel):
                 {"id": "database", "title": "Datebase Config"},
                 {"id": "processing", "title": "Processing"},
                 {"id": "embedding", "title": "Embedding"},
+                {"id": "indexing", "title": "Indexing"},
             ]
         }
 

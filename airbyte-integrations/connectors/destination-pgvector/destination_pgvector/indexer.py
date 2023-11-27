@@ -30,14 +30,13 @@ class PGVectorIndexer(Indexer):
 
     def pre_sync(self, catalog: ConfiguredAirbyteCatalog) -> None:
         # check compatibilty between config and current state
-        self.client = self._get_client()
-        streams_to_overwrite = [
-            create_stream_identifier(stream.stream)
-            for stream in catalog.streams
-            if stream.destination_sync_mode == DestinationSyncMode.overwrite
-        ]
-        if len(streams_to_overwrite):
-            self._delete_by_filter(field_name=METADATA_STREAM_FIELD, field_values=streams_to_overwrite)
+        """
+        Run before the sync starts. This method should be used to make sure all records in the destination that belong to streams with a destination mode of overwrite are deleted.
+
+        Each record has a metadata field with the name airbyte_cdk.destinations.vector_db_based.document_processor.METADATA_STREAM_FIELD which can be used to filter documents for deletion.
+        Use the airbyte_cdk.destinations.vector_db_based.utils.create_stream_identifier method to create the stream identifier based on the stream definition to use for filtering.
+        """
+        pass
 
     # def post_sync(self) -> List[AirbyteMessage]:
     #     """

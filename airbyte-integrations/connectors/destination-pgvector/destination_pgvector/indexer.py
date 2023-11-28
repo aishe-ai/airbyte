@@ -2,56 +2,122 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-import json
-import uuid
+import os
+import logging
 
-import chromadb
 from airbyte_cdk.destinations.vector_db_based.document_processor import METADATA_RECORD_ID_FIELD, METADATA_STREAM_FIELD
 from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
 from airbyte_cdk.destinations.vector_db_based.utils import create_stream_identifier, format_exception
-from airbyte_cdk.models import ConfiguredAirbyteCatalog
+from airbyte_cdk.models import ConfiguredAirbyteCatalog, AirbyteMessage, ConfiguredAirbyteCatalog
 from airbyte_cdk.models.airbyte_protocol import DestinationSyncMode
-from chromadb.config import Settings
 
+from typing import Any, Generator, Iterable, List, Optional, Tuple, TypeVar
 
 from destination_pgvector.config import ConfigModel
-from destination_chroma.utils import is_valid_collection_name
+
+
+from sqlmodel import Session, select
+
+from destination_pgvector.data_model import DataSource, DocumentTable
+from destination_pgvector.database import get_engine, get_test_data
 
 
 # Problem: one document table for all customers doesnt allow different indixes per customer
 # -> partial paritioning or extra table
 # each document_source needs its own table for its document and the specifiy embedding index
+
+# indexing=IVFFlatIndexingModel(mode='ivfflat') database=DatabaseConfigModel(host='localhost', port=5432, database='aisheAI', username='aisheAI', password=SecretStr('**********')) embedding=OpenAIEmbeddingConfigModel(mode='openai', openai_key='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') processing=ProcessingConfigModel(chunk_size=1024, chunk_overlap=0, text_fields=['title', 'content.body'], metadata_fields=['author', 'publish_date'], text_splitter=SeparatorSplitterConfigModel(mode='separator', separators=['"\\n\\n"', '"\\n"', '" "', '"."'], keep_separator=False), field_name_mappings=[])
+
+
 class PGVectorIndexer(Indexer):
-    # indexing=IVFFlatIndexingModel(mode='ivfflat') database=DatabaseConfigModel(host='localhost', port=5432, database='aisheAI', username='aisheAI', password=SecretStr('**********')) embedding=OpenAIEmbeddingConfigModel(mode='openai', openai_key='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') processing=ProcessingConfigModel(chunk_size=1024, chunk_overlap=0, text_fields=['title', 'content.body'], metadata_fields=['author', 'publish_date'], text_splitter=SeparatorSplitterConfigModel(mode='separator', separators=['"\\n\\n"', '"\\n"', '" "', '"."'], keep_separator=False), field_name_mappings=[])
     def __init__(self, config: ConfigModel):
         super().__init__(config)
-        # TODO: Store needed data in object, db_params, indexing
-        self.collection_name = config.collection_name
+        self.db_engine = get_engine(config.database)
 
-    def pre_sync(self, catalog: ConfiguredAirbyteCatalog) -> None:
-        # check compatibilty between config and current state
+    def pre_sync(self, catalog):
         """
-        Run before the sync starts. This method should be used to make sure all records in the destination that belong to streams with a destination mode of overwrite are deleted.
+        Run before the sync starts.
+        This method should be used to make sure all records in the destination that belong to streams with a destination mode of overwrite are deleted.
 
         Each record has a metadata field with the name airbyte_cdk.destinations.vector_db_based.document_processor.METADATA_STREAM_FIELD which can be used to filter documents for deletion.
         Use the airbyte_cdk.destinations.vector_db_based.utils.create_stream_identifier method to create the stream identifier based on the stream definition to use for filtering.
         """
+        # TODO: handle dynamic index changes for embeddings here, provided by frontend
+
+        # Step 1: Retrieve the current index configuration from the database
+        desired_embedding_index = self.config.indexing.mode
+        # TODO: check org name extraction is possible
+
+        # Check for test or dev environment
+        if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
+            test_org, test_member = get_test_data(self.db_engine)
+
+        print(test_org, test_member, desired_embedding_index)
+        with Session(self.db_engine) as session:
+            for configured_stream in catalog.streams:
+                # Extract the name of the stream
+                data_source_name = configured_stream.stream.name
+
+                # TODO: add check if the data source entry exists and and linked to current organisation
+
+                # Construct the target table name
+                target_table_name = f"data_source__{test_org.name}_{data_source_name}"
+
+                # Check if the data source entry exists and is linked to the current organization
+                statement = select(DataSource).where(DataSource.name == data_source_name, DataSource.organization_uuid == test_org.uuid)
+                data_source = session.exec(statement).first()
+                print(data_source)
+                if data_source:
+                    # Logic to handle the data source if it exists and is linked to the current organization
+                    # TODO: Implement specific actions (like updating the index or deleting records)
+                    pass
+                else:
+                    logging.info("Creating new data source")
+                    # Handle the case where the data source does not exist or is not linked to the current organization
+                    # TODO: Implement specific actions for this case
+                    pass
+
+                # # Check if the table exists with the correct index and is linked in the data source table of the organization
+                # statement = select(DataSource).where(DataSource.name == data_source_name)
+                # data_source = session.exec(statement).first()
+
+                # if data_source and data_source.document_table_name == target_table_name:
+                #     # Check if the table has the correct index
+                #     # This requires a direct SQL query as SQLModel does not support index introspection
+                #     # TODO: Implement the SQL query to check the index on the target table
+
+                #     print(f"Table {target_table_name} exists and is correctly linked.")
+                # else:
+                #     # TODO: Handle the case where the table does not exist or is not correctly linked
+                #     print(f"Table {target_table_name} does not exist or is not correctly linked.")
+
+        # for configured_stream in catalog:
+        #     # Extract the name of the stream
+        #     data_source_name = configured_stream[1][0].stream.name
+
+        #     # TODO: improve table name interpolation for easier destruction while respecting postgres best practises
+        #     target_table_name = f"data_source__{target_org_name}_{data_source_name}"
+
+        #     # TODO: check if table exists with correct index and is linked in data source table of organisation, using sqlmodel only
+
+        #     print(target_table_name, data_source_name)
+
         pass
 
-    # def post_sync(self) -> List[AirbyteMessage]:
-    #     """
-    #     Run after the sync finishes. This method should be used to perform any cleanup operations and can return a list of AirbyteMessages to be logged.
-    #     """
-    #     return []
+    def post_sync(self):
+        """
+        Run after the sync finishes. This method should be used to perform any cleanup operations and can return a list of AirbyteMessages to be logged.
+        """
+        return []
 
     def index(self, document_chunks, namespace, stream):
-        # not needed, done by db
         """
         Index a list of document chunks.
 
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
+        # not needed, done by postgres and pgvector index
         pass
 
     def delete(self, delete_ids, namespace, stream):

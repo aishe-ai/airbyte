@@ -18,6 +18,16 @@ from pgvector.sqlalchemy import Vector
 
 from pydantic import UUID4, EmailStr
 
+from dataclasses import dataclass
+from polyfactory.factories import DataclassFactory
+from uuid import uuid4
+from typing import List, Optional
+from pydantic import EmailStr
+from random import randint, choice
+
+import random
+import uuid
+
 
 # Define the Organizations SQLModel with its attributes.
 class Organization(SQLModel, table=True):
@@ -72,7 +82,7 @@ class DocumentTable(SQLModel, table=True):
 
     # Foreign key relation to DataSources.
     data_source_uuid: UUID4 = Field(foreign_key="datasource.uuid")
-    data_source: DataSource = Relationship(back_populates="document_tables")
+    # data_source: DataSource = Relationship(back_populates="document_tables")
 
     # Relationships
     memberships: List["Membership"] = Relationship(back_populates="document_table")
@@ -94,3 +104,57 @@ class Membership(SQLModel, table=True):
 
     document_uuid: UUID4 = Field(foreign_key="documenttable.name")
     document_table: DocumentTable = Relationship(back_populates="memberships")
+
+
+# TODO, add function for generating mock data based on above data, which is linked together so it can be stored correctly into db, using polyfactory
+
+
+def create_mock_organization(org_name=None, member_name=None, member_email=None):
+    # Use provided values or generate random ones
+    org_name = org_name or f"Organization {random.randint(1, 1000)}"
+    member_name = member_name or f"Member {random.randint(1, 1000)}"
+    member_email = member_email or f"user{random.randint(1, 1000)}@example.com"
+
+    # Create an Organization instance
+    organization = Organization(uuid=uuid.uuid4(), name=org_name, description=f"Description {random.randint(1, 1000)}")
+
+    # Create a Member instance
+    member = Member(
+        uuid=uuid.uuid4(),
+        email=member_email,
+        name=member_name,
+        organization_uuid=organization.uuid,
+    )
+
+    data_source = DataSource(
+        uuid=uuid.uuid4(),
+        name=f"DataSource {random.randint(1, 1000)}",
+        description=f"Description {random.randint(1, 1000)}",
+        bot_auth_data={},
+        document_table_name=f"DocumentTable {random.randint(1, 1000)}",
+        organization_uuid=organization.uuid,
+    )
+    document_table = DocumentTable(
+        name=f"DocumentTable {random.randint(1, 1000)}",
+        uuid=uuid.uuid4(),
+        description=f"Description {random.randint(1, 1000)}",
+        url=f"https://example.com/{random.randint(1, 1000)}",
+        context_data={},
+        embeddings=[random.uniform(0, 1) for _ in range(10)],
+        content=f"Content {random.randint(1, 1000)}",
+        data_source_uuid=data_source.uuid,
+    )
+
+    membership = Membership(
+        uuid=uuid.uuid4(),
+        data_source_role=random.choice(["admin", "user", "viewer"]),
+        namespace_user_name=f"User {random.randint(1, 1000)}",
+        document_table_name=document_table.name,
+        data_source_uuid=data_source.uuid,
+        member_uuid=member.uuid,
+        document_uuid=document_table.uuid,
+    )
+
+    # return organization, data_source, member, document_table, membership
+
+    return organization, member

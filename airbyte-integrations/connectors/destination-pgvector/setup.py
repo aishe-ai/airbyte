@@ -17,7 +17,7 @@ MAIN_REQUIREMENTS = [
     "sqlalchemy<2.0",
     "pgvector",
     "airbyte-cdk[vector-db-based]==0.51.41",
-    "chromadb",
+    "polyfactory",
 ]
 
 TEST_REQUIREMENTS = ["pytest~=6.2"]

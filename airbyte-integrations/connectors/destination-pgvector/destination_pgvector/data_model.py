@@ -1,22 +1,16 @@
-from typing import List, Optional
-from sqlmodel import Field, Relationship, SQLModel
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import func, cast, Numeric, Column
-
-from pgvector.sqlalchemy import Vector
-from pydantic import UUID4, EmailStr
-import random
 import uuid
 
-
+# needed, dont ask me why
+import uuid as uuid_pkg
+import random
 from typing import List, Optional
+
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy import Column
-from pgvector.sqlalchemy import Vector
+from sqlalchemy.dialects.postgresql import UUID as SQLAlchemyUUID
+from sqlalchemy import Column, ForeignKey
 
-import uuid as uuid_pkg
-from sqlmodel import SQLModel, Field
+from pgvector.sqlalchemy import Vector
 
 
 class Organization(SQLModel, table=True):
@@ -125,14 +119,6 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
     )
 
     return organization, member, document_table
-
-
-from sqlalchemy import Column, ForeignKey, Integer
-
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects.postgresql import UUID as SQLAlchemyUUID
-
-import uuid
 
 
 def document_table_factory(organization: Organization, data_source: DataSource) -> SQLModel:

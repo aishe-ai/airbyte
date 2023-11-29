@@ -21,14 +21,6 @@ from pydantic import BaseModel, Field
 from typing import Literal, Union
 
 
-class BruteForceIndexingModel(BaseModel):
-    mode: Literal["brute_force"] = Field("brute_force", const=True)
-
-    class Config:
-        title = "Brute Force Indexing"
-        schema_extra = {"description": "Use brute force search without any indexing."}
-
-
 class IVFFlatIndexingModel(BaseModel):
     mode: Literal["ivfflat"] = Field("ivfflat", const=True)
 
@@ -42,23 +34,10 @@ class HNSWIndexingModel(BaseModel):
 
     class Config:
         title = "HNSW Indexing"
-        schema_extra = {"description": "Use Hierarchical Navigable Small World (HNSW) indexing method."}
+        schema_extra = {"description": "Use Hierarchical Navigable Small World (HNSW) indexing method. Only this one will work!"}
 
 
-class FlatIndexingModel(BaseModel):
-    mode: Literal["flat"] = Field("flat", const=True)
-
-    class Config:
-        title = "Flat Indexing"
-        schema_extra = {"description": "Use flat indexing method."}
-
-
-class LSHIndexingModel(BaseModel):
-    mode: Literal["lsh"] = Field("lsh", const=True)
-
-    class Config:
-        title = "LSH Indexing"
-        schema_extra = {"description": "Use Locality-Sensitive Hashing (LSH) indexing method."}
+pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
 
 
 class DatabaseConfigModel(BaseModel):
@@ -75,7 +54,7 @@ class DatabaseConfigModel(BaseModel):
 
 
 class ConfigModel(BaseModel):
-    indexing: Union[BruteForceIndexingModel, IVFFlatIndexingModel, HNSWIndexingModel, FlatIndexingModel, LSHIndexingModel] = Field(
+    indexing: pgvector_indexes = Field(
         ...,
         title="Indexing",
         description="Indexing configuration, see [Repo](https://github.com/pgvector/pgvector#indexing)",

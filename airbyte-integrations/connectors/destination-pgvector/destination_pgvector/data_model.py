@@ -8,7 +8,7 @@ from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as SQLAlchemyUUID
-from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Column, ForeignKey, Index
 
 from pgvector.sqlalchemy import Vector
 
@@ -118,7 +118,7 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
         data_source_meta_data={},  # Assuming JSONB field
     )
 
-    return organization, member, document_table
+    return organization, member
 
 
 def document_table_factory(organization: Organization, data_source: DataSource) -> SQLModel:
@@ -132,33 +132,18 @@ def document_table_factory(organization: Organization, data_source: DataSource) 
         description: Optional[str] = None
         url: Optional[str] = None
         context_data: dict = Field(sa_column=Column(JSONB))
-        embeddings: List[float] = Field(sa_column=Column(Vector(None)))
+        embeddings: List[float] = Field(sa_column=Column(Vector(2000)))
         content: Optional[str] = None
         # memberships: List["Membership"] = Relationship(back_populates="document")
 
+    # Define the pgvector index
+    Index(
+        f"embedding_idx_{organization.name}_{data_source.name}",
+        DocumentTableTemplate.embeddings,
+        postgresql_using="hnsw",
+        postgresql_with={"m": 16, "ef_construction": 200},
+        postgresql_ops={"embeddings": "vector_l2_ops"},
+    )
+
     return DocumentTableTemplate
 
-
-def create_document_table_class(organization_name: str, data_source: DataSource):
-    table_name = f"document_table__{organization_name}_{data_source.name}"
-    DocumentTable = type(table_name, (DocumentTableTemplate,), {"__tablename__": table_name})
-    # Create an instance of the dynamically created DocumentTable
-    document_table_instance = DocumentTable(
-        uuid=str(uuid.uuid4()),
-        data_source_uuid=data_source.uuid,  # Fill this based on your requirements
-        name=f"DocumentTable {random.randint(1, 1000)}",
-        description=f"Description {random.randint(1, 1000)}",
-        url=f"https://example.com/{random.randint(1, 1000)}",
-        context_data={},  # Assuming JSONB field
-        embeddings=[random.uniform(0, 1) for _ in range(10)],  # Example vector data
-        content=f"Content {random.randint(1, 1000)}",
-    )
-
-    # Dynamically add the relationship to Membership
-    setattr(
-        Membership,
-        "document",
-        Relationship(back_populates="memberships", sa_relationship_kwargs={"foreign_keys": [document_table_instance.uuid]}),
-    )
-
-    return document_table_instance

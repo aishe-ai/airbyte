@@ -146,4 +146,3 @@ def document_table_factory(organization: Organization, data_source: DataSource) 
     )
 
     return DocumentTableTemplate
-

@@ -45,7 +45,6 @@ class PGVectorIndexer(Indexer):
 
         # Step 1: Retrieve the current index configuration from the database
         desired_embedding_index = self.config.indexing.mode
-        # TODO: check org name extraction is possible
 
         # Check for test or dev environment
         if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
@@ -71,31 +70,6 @@ class PGVectorIndexer(Indexer):
                 document_table.metadata.create_all(self.db_engine)
 
                 print(document_table.__tablename__)
-
-                # # Check if the table exists with the correct index and is linked in the data source table of the organization
-                # statement = select(DataSource).where(DataSource.name == data_source_name)
-                # data_source = session.exec(statement).first()
-
-                # if data_source and data_source.document_table_name == target_table_name:
-                #     # Check if the table has the correct index
-                #     # This requires a direct SQL query as SQLModel does not support index introspection
-                #     # TODO: Implement the SQL query to check the index on the target table
-
-                #     print(f"Table {target_table_name} exists and is correctly linked.")
-                # else:
-                #     # TODO: Handle the case where the table does not exist or is not correctly linked
-                #     print(f"Table {target_table_name} does not exist or is not correctly linked.")
-
-        # for configured_stream in catalog:
-        #     # Extract the name of the stream
-        #     data_source_name = configured_stream[1][0].stream.name
-
-        #     # TODO: improve table name interpolation for easier destruction while respecting postgres best practises
-        #     target_table_name = f"data_source__{target_org_name}_{data_source_name}"
-
-        #     # TODO: check if table exists with correct index and is linked in data source table of organisation, using sqlmodel only
-
-        #     print(target_table_name, data_source_name)
 
         pass
 

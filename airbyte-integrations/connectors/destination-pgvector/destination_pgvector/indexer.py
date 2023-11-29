@@ -5,25 +5,13 @@
 import os
 import logging
 
-from airbyte_cdk.destinations.vector_db_based.document_processor import METADATA_RECORD_ID_FIELD, METADATA_STREAM_FIELD
 from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
-from airbyte_cdk.destinations.vector_db_based.utils import create_stream_identifier, format_exception
-from airbyte_cdk.models import ConfiguredAirbyteCatalog, AirbyteMessage, ConfiguredAirbyteCatalog
-from airbyte_cdk.models.airbyte_protocol import DestinationSyncMode
-
-from typing import Any, Generator, Iterable, List, Optional, Tuple, TypeVar
-
-from destination_pgvector.config import ConfigModel
-
 
 from sqlmodel import Session, select
 
 from destination_pgvector.data_model import DataSource, create_data_source, document_table_factory
 from destination_pgvector.database import get_engine, get_test_data
-
-# Problem: one document table for all customers doesnt allow different indixes per customer
-# -> partial paritioning or extra table
-# each document_source needs its own table for its document and the specifiy embedding index
+from destination_pgvector.config import ConfigModel
 
 # indexing=IVFFlatIndexingModel(mode='ivfflat') database=DatabaseConfigModel(host='localhost', port=5432, database='aisheAI', username='aisheAI', password=SecretStr('**********')) embedding=OpenAIEmbeddingConfigModel(mode='openai', openai_key='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') processing=ProcessingConfigModel(chunk_size=1024, chunk_overlap=0, text_fields=['title', 'content.body'], metadata_fields=['author', 'publish_date'], text_splitter=SeparatorSplitterConfigModel(mode='separator', separators=['"\\n\\n"', '"\\n"', '" "', '"."'], keep_separator=False), field_name_mappings=[])
 
@@ -68,9 +56,6 @@ class PGVectorIndexer(Indexer):
                 # Construct the document table if not created yet
                 document_table = document_table_factory(organization, data_source)
                 document_table.metadata.create_all(self.db_engine)
-
-                print(document_table.__tablename__)
-
         pass
 
     def post_sync(self):
@@ -86,6 +71,7 @@ class PGVectorIndexer(Indexer):
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
+
         # just store documents into db with correct deps
         # explizit indexing not needed, done by postgres and pgvector index
         pass

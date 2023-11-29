@@ -72,6 +72,7 @@ class PGVectorIndexer(Indexer):
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
+        print(document_chunks, namespace, stream)
 
         # just store documents into db with correct deps
         # explizit indexing not needed, done by postgres and pgvector index

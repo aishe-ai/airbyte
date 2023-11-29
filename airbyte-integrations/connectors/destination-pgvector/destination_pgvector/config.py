@@ -74,7 +74,7 @@ class ConfigModel(BaseModel):
     processing: ProcessingConfigModel
 
     class Config:
-        title = "Pinecone Destination Config"
+        title = "PGVector Destination Config"
         schema_extra = {
             "groups": [
                 {"id": "database", "title": "Datebase Config"},

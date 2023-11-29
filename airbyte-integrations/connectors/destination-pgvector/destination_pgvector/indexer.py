@@ -18,9 +18,8 @@ from destination_pgvector.config import ConfigModel
 
 from sqlmodel import Session, select
 
-from destination_pgvector.data_model import DataSource, DocumentTable
+from destination_pgvector.data_model import DataSource, DocumentTableTemplate, create_data_source
 from destination_pgvector.database import get_engine, get_test_data
-
 
 # Problem: one document table for all customers doesnt allow different indixes per customer
 # -> partial paritioning or extra table
@@ -50,32 +49,32 @@ class PGVectorIndexer(Indexer):
 
         # Check for test or dev environment
         if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
-            test_org, test_member = get_test_data(self.db_engine)
+            organization, test_member = get_test_data(self.db_engine)
 
-        print(test_org, test_member, desired_embedding_index)
         with Session(self.db_engine) as session:
             for configured_stream in catalog.streams:
                 # Extract the name of the stream
                 data_source_name = configured_stream.stream.name
 
-                # TODO: add check if the data source entry exists and and linked to current organisation
-
-                # Construct the target table name
-                target_table_name = f"data_source__{test_org.name}_{data_source_name}"
-
                 # Check if the data source entry exists and is linked to the current organization
-                statement = select(DataSource).where(DataSource.name == data_source_name, DataSource.organization_uuid == test_org.uuid)
+                statement = select(DataSource).where(DataSource.name == data_source_name, DataSource.organization_uuid == organization.uuid)
                 data_source = session.exec(statement).first()
-                print(data_source)
-                if data_source:
-                    # Logic to handle the data source if it exists and is linked to the current organization
-                    # TODO: Implement specific actions (like updating the index or deleting records)
-                    pass
-                else:
-                    logging.info("Creating new data source")
+                if not data_source:
                     # Handle the case where the data source does not exist or is not linked to the current organization
-                    # TODO: Implement specific actions for this case
-                    pass
+                    logging.info("Creating new data source")
+                    data_source = create_data_source(name=data_source_name, organization=organization)
+                    session.add(data_source)
+                    session.commit()
+
+                # Construct the document table
+                document_table_name = f"document_table__{organization.name}_{data_source.name}"
+                print(document_table_name)
+
+                # Example usage
+
+                # DocumentTable, data_source = create_table_and_link_data_source(
+                #     target_table_name, data_source_name, organization, self.db_engine
+                # )
 
                 # # Check if the table exists with the correct index and is linked in the data source table of the organization
                 # statement = select(DataSource).where(DataSource.name == data_source_name)
@@ -117,7 +116,8 @@ class PGVectorIndexer(Indexer):
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
-        # not needed, done by postgres and pgvector index
+        # just store documents into db with correct deps
+        # explizit indexing not needed, done by postgres and pgvector index
         pass
 
     def delete(self, delete_ids, namespace, stream):

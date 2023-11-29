@@ -14,7 +14,10 @@ def migrate(config):
     # Create tables
     with engine.begin() as connection:  # Use 'begin' to auto-commit
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-        SQLModel.metadata.create_all(connection)
+
+        # Create only specific tables
+        tables_to_create = [table for table in SQLModel.metadata.sorted_tables if table.name not in ["documenttabletemplate"]]
+        SQLModel.metadata.create_all(connection, tables=tables_to_create)
 
     logging.info("Created all needed tables")
 

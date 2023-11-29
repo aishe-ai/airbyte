@@ -1,112 +1,84 @@
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy.dialects.postgresql import JSONB
-from pgvector.sqlalchemy import Vector
-from pydantic import UUID4, EmailStr
-from typing import List, Optional
-
-from sqlmodel import Field, Relationship, SQLModel
-
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import UserDefinedType
 from sqlalchemy import func, cast, Numeric, Column
-from sqlalchemy.dialects.postgresql import ARRAY
-
-from sqlalchemy.sql.expression import bindparam
 
 from pgvector.sqlalchemy import Vector
-
 from pydantic import UUID4, EmailStr
-
-from dataclasses import dataclass
-from polyfactory.factories import DataclassFactory
-from uuid import uuid4
-from typing import List, Optional
-from pydantic import EmailStr
-from random import randint, choice
-
 import random
 import uuid
 
 
-# Define the Organizations SQLModel with its attributes.
+from typing import List, Optional
+from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column
+from pgvector.sqlalchemy import Vector
+
+
 class Organization(SQLModel, table=True):
-    uuid: UUID4 = Field(primary_key=True)
+    uuid: str = Field(primary_key=True)
     name: str
     description: Optional[str] = None
-
-    # Relationships
     data_sources: List["DataSource"] = Relationship(back_populates="organization")
     members: List["Member"] = Relationship(back_populates="organization")
 
 
-# Define the DataSources SQLModel with its attributes.
 class DataSource(SQLModel, table=True):
-    uuid: UUID4 = Field(primary_key=True)
+    uuid: str = Field(primary_key=True)
+    organization_uuid: str = Field(foreign_key="organization.uuid")
     name: str
     description: Optional[str] = None
     bot_auth_data: dict = Field(sa_column=Column(JSONB))
-    document_table_name: str  # New field for document table name
-
-    # Foreign key relation to Organizations.
-    organization_uuid: UUID4 = Field(foreign_key="organization.uuid")
+    document_table_metadata: dict = Field(sa_column=Column(JSONB))
+    airbyte_meta_data: dict = Field(sa_column=Column(JSONB))
     organization: Organization = Relationship(back_populates="data_sources")
-
-    # Relationships
     memberships: List["Membership"] = Relationship(back_populates="data_source")
 
 
-# Define the Members SQLModel with its attributes.
 class Member(SQLModel, table=True):
-    uuid: UUID4 = Field(primary_key=True)
-    email: EmailStr
+    uuid: str = Field(primary_key=True)
+    organization_uuid: str = Field(foreign_key="organization.uuid")
+    email: str
     name: str
-
-    # Foreign key relation to Organizations.
-    organization_uuid: UUID4 = Field(foreign_key="organization.uuid")
     organization: Organization = Relationship(back_populates="members")
-
-    # Relationships
     memberships: List["Membership"] = Relationship(back_populates="member")
 
 
-# Define the DocumentTable SQLModel with its attributes.
-class DocumentTable(SQLModel, table=True):
-    name: str = Field(primary_key=True)
-    uuid: UUID4
+class DocumentTableTemplate(SQLModel):
+    # Note: This is a template for dynamically named document tables.
+    uuid: str = Field(primary_key=True)
+    data_source_uuid: str = Field(foreign_key="datasource.uuid")
+    name: str
     description: Optional[str] = None
-    url: str
+    url: Optional[str] = None
     context_data: dict = Field(sa_column=Column(JSONB))
     embeddings: List[float] = Field(sa_column=Column(Vector(None)))
-    content: str
-
-    # Foreign key relation to DataSources.
-    data_source_uuid: UUID4 = Field(foreign_key="datasource.uuid")
-    # data_source: DataSource = Relationship(back_populates="document_tables")
-
-    # Relationships
-    memberships: List["Membership"] = Relationship(back_populates="document_table")
+    content: Optional[str] = None
+    memberships: List["Membership"] = Relationship(back_populates="document")
 
 
-# Define the Memberships SQLModel with its attributes.
 class Membership(SQLModel, table=True):
-    uuid: UUID4 = Field(primary_key=True)
-    data_source_role: str
-    namespace_user_name: str
-    document_table_name: str  # New field for document table name
-
-    # Foreign key relations.
-    data_source_uuid: UUID4 = Field(foreign_key="datasource.uuid")
+    uuid: str = Field(primary_key=True)
+    data_source_uuid: str = Field(foreign_key="datasource.uuid")
+    member_uuid: str = Field(foreign_key="member.uuid")
+    document_uuid: str  # No foreign key here, as it's dynamic
+    data_source_meta_data: dict = Field(sa_column=Column(JSONB))
     data_source: DataSource = Relationship(back_populates="memberships")
-
-    member_uuid: UUID4 = Field(foreign_key="member.uuid")
     member: Member = Relationship(back_populates="memberships")
-
-    document_uuid: UUID4 = Field(foreign_key="documenttable.name")
-    document_table: DocumentTable = Relationship(back_populates="memberships")
+    # 'document' relationship will be added dynamically
 
 
-# TODO, add function for generating mock data based on above data, which is linked together so it can be stored correctly into db, using polyfactory
+def create_data_source(name: str, organization: Organization, document_table_name=""):
+    return DataSource(
+        uuid=str(uuid.uuid4()),
+        name=name,
+        description=f"Airbyte Data Source",
+        bot_auth_data={},  # Assuming this is the correct format for your JSONB field
+        document_table_metadata={name: document_table_name},
+        airbyte_meta_data={},  # Assuming a default empty dict, adjust as needed
+        organization_uuid=organization.uuid,
+    )
 
 
 def create_mock_organization(org_name=None, member_name=None, member_email=None):
@@ -116,45 +88,62 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
     member_email = member_email or f"user{random.randint(1, 1000)}@example.com"
 
     # Create an Organization instance
-    organization = Organization(uuid=uuid.uuid4(), name=org_name, description=f"Description {random.randint(1, 1000)}")
+    organization = Organization(uuid=str(uuid.uuid4()), name=org_name, description=f"Description {random.randint(1, 1000)}")
 
     # Create a Member instance
     member = Member(
-        uuid=uuid.uuid4(),
+        uuid=str(uuid.uuid4()),
         email=member_email,
         name=member_name,
         organization_uuid=organization.uuid,
     )
 
+    # Create a DataSource instance
     data_source = DataSource(
-        uuid=uuid.uuid4(),
+        uuid=str(uuid.uuid4()),
         name=f"DataSource {random.randint(1, 1000)}",
         description=f"Description {random.randint(1, 1000)}",
-        bot_auth_data={},
-        document_table_name=f"DocumentTable {random.randint(1, 1000)}",
+        bot_auth_data={},  # Assuming JSONB field
+        document_table_metadata={},  # Assuming JSONB field
+        airbyte_meta_data={},  # Assuming JSONB field
         organization_uuid=organization.uuid,
     )
-    document_table = DocumentTable(
-        name=f"DocumentTable {random.randint(1, 1000)}",
-        uuid=uuid.uuid4(),
-        description=f"Description {random.randint(1, 1000)}",
-        url=f"https://example.com/{random.randint(1, 1000)}",
-        context_data={},
-        embeddings=[random.uniform(0, 1) for _ in range(10)],
-        content=f"Content {random.randint(1, 1000)}",
-        data_source_uuid=data_source.uuid,
-    )
 
+    # Create a dynamically named DocumentTable instance
+    document_table = create_document_table_class(org_name, data_source)
+
+    # Create a Membership instance
     membership = Membership(
-        uuid=uuid.uuid4(),
-        data_source_role=random.choice(["admin", "user", "viewer"]),
-        namespace_user_name=f"User {random.randint(1, 1000)}",
-        document_table_name=document_table.name,
+        uuid=str(uuid.uuid4()),
         data_source_uuid=data_source.uuid,
         member_uuid=member.uuid,
-        document_uuid=document_table.uuid,
+        document_uuid=document_table.uuid,  # Assuming this is the correct field
+        data_source_meta_data={},  # Assuming JSONB field
     )
 
-    # return organization, data_source, member, document_table, membership
-
     return organization, member
+
+
+def create_document_table_class(organization_name: str, data_source: DataSource):
+    table_name = f"document_table__{organization_name}_{data_source.name}"
+    DocumentTable = type(table_name, (DocumentTableTemplate,), {"__tablename__": table_name})
+    # Create an instance of the dynamically created DocumentTable
+    document_table_instance = DocumentTable(
+        uuid=str(uuid.uuid4()),
+        data_source_uuid=data_source.uuid,  # Fill this based on your requirements
+        name=f"DocumentTable {random.randint(1, 1000)}",
+        description=f"Description {random.randint(1, 1000)}",
+        url=f"https://example.com/{random.randint(1, 1000)}",
+        context_data={},  # Assuming JSONB field
+        embeddings=[random.uniform(0, 1) for _ in range(10)],  # Example vector data
+        content=f"Content {random.randint(1, 1000)}",
+    )
+
+    # Dynamically add the relationship to Membership
+    setattr(
+        Membership,
+        "document",
+        Relationship(back_populates="memberships", sa_relationship_kwargs={"foreign_keys": [document_table_instance.uuid]}),
+    )
+
+    return document_table_instance

@@ -18,7 +18,7 @@ from destination_pgvector.config import ConfigModel
 
 from sqlmodel import Session, select
 
-from destination_pgvector.data_model import DataSource, DocumentTableTemplate, create_data_source
+from destination_pgvector.data_model import DataSource, create_data_source, create_document_table_class
 from destination_pgvector.database import get_engine, get_test_data
 
 # Problem: one document table for all customers doesnt allow different indixes per customer
@@ -67,9 +67,9 @@ class PGVectorIndexer(Indexer):
                     session.commit()
 
                 # Construct the document table
-                document_table_name = f"document_table__{organization.name}_{data_source.name}"
-                print(document_table_name)
-
+                document_table = create_document_table_class(self.db_engine, organization, data_source)
+                # session.add(document_table)
+                # session.commit()
                 # Example usage
 
                 # DocumentTable, data_source = create_table_and_link_data_source(

@@ -15,9 +15,12 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import Column
 from pgvector.sqlalchemy import Vector
 
+import uuid as uuid_pkg
+from sqlmodel import SQLModel, Field
+
 
 class Organization(SQLModel, table=True):
-    uuid: str = Field(primary_key=True)
+    uuid: uuid_pkg.UUID = Field(primary_key=True)
     name: str
     description: Optional[str] = None
     data_sources: List["DataSource"] = Relationship(back_populates="organization")
@@ -25,8 +28,8 @@ class Organization(SQLModel, table=True):
 
 
 class DataSource(SQLModel, table=True):
-    uuid: str = Field(primary_key=True)
-    organization_uuid: str = Field(foreign_key="organization.uuid")
+    uuid: uuid_pkg.UUID = Field(primary_key=True)
+    organization_uuid: uuid_pkg.UUID = Field(foreign_key="organization.uuid")
     name: str
     description: Optional[str] = None
     bot_auth_data: dict = Field(sa_column=Column(JSONB))
@@ -37,8 +40,8 @@ class DataSource(SQLModel, table=True):
 
 
 class Member(SQLModel, table=True):
-    uuid: str = Field(primary_key=True)
-    organization_uuid: str = Field(foreign_key="organization.uuid")
+    uuid: uuid_pkg.UUID = Field(primary_key=True)
+    organization_uuid: uuid_pkg.UUID = Field(foreign_key="organization.uuid")
     email: str
     name: str
     organization: Organization = Relationship(back_populates="members")
@@ -47,8 +50,8 @@ class Member(SQLModel, table=True):
 
 class DocumentTableTemplate(SQLModel):
     # Note: This is a template for dynamically named document tables.
-    uuid: str = Field(primary_key=True)
-    data_source_uuid: str = Field(foreign_key="datasource.uuid")
+    uuid: uuid_pkg.UUID = Field(primary_key=True)
+    data_source_uuid: uuid_pkg.UUID = Field(foreign_key="datasource.uuid")
     name: str
     description: Optional[str] = None
     url: Optional[str] = None
@@ -59,10 +62,10 @@ class DocumentTableTemplate(SQLModel):
 
 
 class Membership(SQLModel, table=True):
-    uuid: str = Field(primary_key=True)
-    data_source_uuid: str = Field(foreign_key="datasource.uuid")
-    member_uuid: str = Field(foreign_key="member.uuid")
-    document_uuid: str  # No foreign key here, as it's dynamic
+    uuid: uuid_pkg.UUID = Field(primary_key=True)
+    data_source_uuid: uuid_pkg.UUID = Field(foreign_key="datasource.uuid")
+    member_uuid: uuid_pkg.UUID = Field(foreign_key="member.uuid")
+    document_uuid: uuid_pkg.UUID  # No foreign key here, as it's dynamic
     data_source_meta_data: dict = Field(sa_column=Column(JSONB))
     data_source: DataSource = Relationship(back_populates="memberships")
     member: Member = Relationship(back_populates="memberships")
@@ -110,7 +113,7 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
     )
 
     # Create a dynamically named DocumentTable instance
-    document_table = create_document_table_class(org_name, data_source)
+    document_table = document_table_factory(organization, data_source)
 
     # Create a Membership instance
     membership = Membership(
@@ -121,7 +124,33 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
         data_source_meta_data={},  # Assuming JSONB field
     )
 
-    return organization, member
+    return organization, member, document_table
+
+
+from sqlalchemy import Column, ForeignKey, Integer
+
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as SQLAlchemyUUID
+
+import uuid
+
+
+def document_table_factory(organization: Organization, data_source: DataSource) -> SQLModel:
+    class DocumentTableTemplate(SQLModel, table=True):
+        __tablename__ = f"document_table__{organization.name}_{data_source.name}"
+
+        # Note: This is a template for dynamically named document tables.
+        uuid: uuid_pkg.UUID = Field(primary_key=True)
+        data_source_uuid: uuid_pkg.UUID = Field(sa_column=Column(SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")))
+        name: str
+        description: Optional[str] = None
+        url: Optional[str] = None
+        context_data: dict = Field(sa_column=Column(JSONB))
+        embeddings: List[float] = Field(sa_column=Column(Vector(None)))
+        content: Optional[str] = None
+        # memberships: List["Membership"] = Relationship(back_populates="document")
+
+    return DocumentTableTemplate
 
 
 def create_document_table_class(organization_name: str, data_source: DataSource):

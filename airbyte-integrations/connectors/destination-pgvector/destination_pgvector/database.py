@@ -4,7 +4,7 @@ import logging
 from sqlmodel import create_engine, SQLModel, Session, select
 from sqlalchemy import text
 
-from destination_pgvector.data_model import create_mock_organization, Organization, Member
+from destination_pgvector.data_model import create_mock_organization, Organization, Member, document_table_factory
 
 
 def migrate(config):
@@ -44,15 +44,26 @@ def get_test_data(engine):
         test_member = session.exec(query_member).first()
 
         # If test data not found, create and store it
-        if not test_org or not test_member:
-            test_org, test_member = create_test_data(engine, test_org_name, test_member_name, test_member_email)
+        # if not test_org or not test_member:
+        test_org, test_member, test_doc = create_test_data(engine, test_org_name, test_member_name, test_member_email)
+
+        # Create tables
+        with engine.begin() as connection:  # Use 'begin' to auto-commit
+            # connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+
+            # Create only specific tables
+            tables_to_create = [table for table in SQLModel.metadata.sorted_tables if table.name not in ["documenttabletemplate"]]
+            # SQLModel.metadata.create_all(connection, tables=tables_to_create)
+            test_doc.metadata.create_all(engine)
+
+            # SQLModel.metadata.create_all(connection, tables=[test_doc])
 
         return test_org, test_member
 
 
 def create_test_data(engine, test_org_name, test_member_name, test_member_email):
     with Session(engine) as session:
-        test_org, test_member = create_mock_organization(
+        test_org, test_member, test_doc = create_mock_organization(
             org_name=test_org_name, member_name=test_member_name, member_email=test_member_email
         )
         session.add(test_org)
@@ -63,7 +74,7 @@ def create_test_data(engine, test_org_name, test_member_name, test_member_email)
 
         logging.info("Test data created")
 
-        return test_org, test_member
+        return test_org, test_member, test_doc
 
 
 def get_config_value(config, key, default=None):

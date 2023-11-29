@@ -62,6 +62,7 @@ class PGVectorIndexer(Indexer):
         """
         Run after the sync finishes. This method should be used to perform any cleanup operations and can return a list of AirbyteMessages to be logged.
         """
+        # not needed currently
         return []
 
     def index(self, document_chunks, namespace, stream):
@@ -77,7 +78,6 @@ class PGVectorIndexer(Indexer):
         pass
 
     def delete(self, delete_ids, namespace, stream):
-        # delete document/table
         """
         Delete document chunks belonging to certain record ids.
 
@@ -85,23 +85,15 @@ class PGVectorIndexer(Indexer):
         The delete_ids parameter contains a list of record ids - all chunks with a record id in this list should be deleted from the destination.
         All ids belong to the stream and namespace specified in the parameters.
         """
+        # TODO
         pass
 
     def check(self):
-        # TODO: Perform initial setup for database-related configurations.
-        # 0. Update sqlmodel
-        # 1. Establish and verify database connectivity:
-        #    a. Ensure the database is accessible. Check for the existence of the specific data_source document table.
-        #       Verify if the table's indexing aligns with the configurations specified in the config.
-        #       This step is crucial to ensure that the application is interacting with the correct table and that
-        #       the table is configured as expected for optimal performance and data integrity.
-        #    b. Initialize and store the database connection in an instance variable.
-        #       This connection will be used for subsequent database operations, ensuring efficient reuse of the database connection.
-        #       Storing it in an instance variable makes it readily accessible throughout the class.
-
         """
-        Check if the indexer is configured correctly. This method should be used to check if the indexer is configured correctly and return an error message if it is not.
+        Check if the indexer is configured correctly.
+        This method should be used to check if the indexer is configured correctly and return an error message if it is not.
         """
+        # not needed currently
         pass
 
         # engine = migrate(config)

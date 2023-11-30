@@ -42,19 +42,6 @@ class Member(SQLModel, table=True):
     memberships: List["Membership"] = Relationship(back_populates="member")
 
 
-class DocumentTableTemplate(SQLModel):
-    # Note: This is a template for dynamically named document tables.
-    uuid: uuid_pkg.UUID = Field(primary_key=True)
-    data_source_uuid: uuid_pkg.UUID = Field(foreign_key="datasource.uuid")
-    name: str
-    description: Optional[str] = None
-    url: Optional[str] = None
-    context_data: dict = Field(sa_column=Column(JSONB))
-    embeddings: List[float] = Field(sa_column=Column(Vector(None)))
-    content: Optional[str] = None
-    memberships: List["Membership"] = Relationship(back_populates="document")
-
-
 class Membership(SQLModel, table=True):
     uuid: uuid_pkg.UUID = Field(primary_key=True)
     data_source_uuid: uuid_pkg.UUID = Field(foreign_key="datasource.uuid")
@@ -64,6 +51,20 @@ class Membership(SQLModel, table=True):
     data_source: DataSource = Relationship(back_populates="memberships")
     member: Member = Relationship(back_populates="memberships")
     # 'document' relationship will be added dynamically
+
+
+class BaseDocumentTableTemplate(SQLModel, table=False):
+    # Common fields
+    uuid: uuid_pkg.UUID = Field(primary_key=True)
+    name: str
+    description: Optional[str] = None
+    url: Optional[str] = None
+    context_data: dict = Field(sa_column=Column(JSONB))
+    data_source_uuid: uuid_pkg.UUID = Field(sa_column=Column(SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")))
+    # hardcoded because not setable in openai api
+    embeddings: List[float] = Field(sa_column=Column(Vector(1536)))
+    content: Optional[str] = None
+    # Add other common fields or relationships here
 
 
 def create_data_source(name: str, organization: Organization, document_table_name=""):
@@ -121,22 +122,35 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
     return organization, member
 
 
-def document_table_factory(organization: Organization, data_source: DataSource) -> SQLModel:
-    class DocumentTableTemplate(SQLModel, table=True):
-        __tablename__ = f"document_table__{organization.name}_{data_source.name}"
+def create_document(organization, data_source, raw_document):
+    # Use the factory function to get the correct table class
+    DocumentTable = document_table_factory(organization, data_source)
 
-        # Note: This is a template for dynamically named document tables.
-        uuid: uuid_pkg.UUID = Field(primary_key=True)
+    # Convert UUIDs to strings
+    uuid_str = str(uuid.uuid4())
+    data_source_uuid_str = str(data_source.uuid)
+
+    return DocumentTable(
+        uuid=uuid_str,
+        # TODO: fix weird error
+        # data_source_uuid=data_source.uuid,
+        name="Test document",
+        description="Airbyte Data Source Document",
+        url="",
+        context_data={},
+        embeddings=raw_document.embedding,
+        content=raw_document.page_content,
+    )
+
+
+def document_table_factory(organization, data_source) -> SQLModel:
+    # You can add or override other fields specific to this table if needed
+    class DocumentTableTemplate(BaseDocumentTableTemplate, table=True):
+        __tablename__ = f"document_table__{organization.name}_{data_source.name}"  #
+        __table_args__ = {"extend_existing": True}  # Add this line
         data_source_uuid: uuid_pkg.UUID = Field(sa_column=Column(SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")))
-        name: str
-        description: Optional[str] = None
-        url: Optional[str] = None
-        context_data: dict = Field(sa_column=Column(JSONB))
-        embeddings: List[float] = Field(sa_column=Column(Vector(2000)))
-        content: Optional[str] = None
-        # memberships: List["Membership"] = Relationship(back_populates="document")
 
-    # Define the pgvector index
+    # Define the pgvector index for the subclass
     Index(
         f"embedding_idx_{organization.name}_{data_source.name}",
         DocumentTableTemplate.embeddings,

@@ -9,7 +9,7 @@ from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
 
 from sqlmodel import Session, select
 
-from destination_pgvector.data_model import DataSource, create_data_source, document_table_factory
+from destination_pgvector.data_model import DataSource, create_data_source, document_table_factory, create_document
 from destination_pgvector.database import get_engine, get_test_data
 from destination_pgvector.config import ConfigModel
 
@@ -65,17 +65,29 @@ class PGVectorIndexer(Indexer):
         # not needed currently
         return []
 
-    def index(self, document_chunks, namespace, stream):
+    def index(self, document_chunks, namespace, data_source_name):
         """
         Index a list of document chunks.
 
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
-        print(document_chunks, namespace, stream)
-
-        # just store documents into db with correct deps
         # explizit indexing not needed, done by postgres and pgvector index
+        # TODO: Generalize after langchain integration
+        if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
+            organization, test_member = get_test_data(self.db_engine)
+
+        with Session(self.db_engine) as session:
+            # Check if the data source entry exists and is linked to the current organization
+            statement = select(DataSource).where(DataSource.name == data_source_name, DataSource.organization_uuid == organization.uuid)
+            data_source = session.exec(statement).first()
+
+            # print(document_chunks)
+            for raw_document in document_chunks:
+                docObject = create_document(organization, data_source, raw_document)
+                session.add(docObject)
+                session.commit()
+
         pass
 
     def delete(self, delete_ids, namespace, stream):

@@ -123,7 +123,7 @@ def test_next_page_token_is_input_to_other_methods(mocker):
 
     expected = [{"data": 1}, {"data": 2}, {"data": 3}, {"data": 4}, {"data": 5}, {"data": 6}]
 
-    assert expected == records
+    assert records == expected
 
 
 class StubBadUrlHttpStream(StubBasicReadHttpStream):
@@ -443,7 +443,7 @@ def test_using_cache(mocker, requests_mock):
 
     parent_stream = CacheHttpStreamWithSlices()
     mocker.patch.object(parent_stream, "url_base", "https://google.com/")
-    parent_stream.clear_cache()
+    parent_stream._session.cache.clear()
 
     assert requests_mock.call_count == 0
     assert len(parent_stream._session.cache.responses) == 0

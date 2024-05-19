@@ -26,7 +26,7 @@ from sqlalchemy import text
 
 from uuid import uuid4
 
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 
 
 from destination_pgvector.config import ConfigModel

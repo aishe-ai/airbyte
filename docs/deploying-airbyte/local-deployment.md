@@ -12,7 +12,7 @@ These instructions have been tested on MacOS, Windows, Ubuntu and Fedora.
 
 This tool is intended to get Airbyte running as quickly as possible with no additional configuration necessary.
 Additional configuration options may be added in the future, however, if you need additional configuration options now, use the
-docker compose solution by following the instructions for the `run_ab_platform.sh` script [here](/deploying-airbyte/docker-compose).
+docker-compose solution by following the instructions for the `run_ab_platform.sh` script [here](/deploying-airbyte/docker-compose).
 
 :::
 

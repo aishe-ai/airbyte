@@ -32,7 +32,7 @@ If developing platform:
 ```bash
 git clone git@github.com:{YOUR_USERNAME}/airbyte-platform.git
 cd airbyte-platform
-docker compose up
+docker-compose up
 ```
 
 ## Build with `gradle`
@@ -84,7 +84,7 @@ In your local `airbyte-platform` repository, run the following commands:
 
 ```bash
 SUB_BUILD=PLATFORM ./gradlew build
-VERSION=dev docker compose up
+VERSION=dev docker-compose up
 ```
 
 The build will take a few minutes. Once it completes, Airbyte compiled at current git revision will be running in `dev` mode in your environment.
@@ -92,7 +92,7 @@ The build will take a few minutes. Once it completes, Airbyte compiled at curren
 If you are running just connectors, you don't need the first step:
 
 ```bash
-VERSION=dev docker compose up
+VERSION=dev docker-compose up
 ```
 
 In `dev` mode, all data will be persisted in `/tmp/dev_root`.
@@ -161,7 +161,7 @@ To format your local `airbyte` repository, run `airbyte-ci format fix all`.
 - Spin up Airbyte locally in your local `airbyte-platform` repository so the UI can make requests against the local API.
 
 ```bash
-BASIC_AUTH_USERNAME="" BASIC_AUTH_PASSWORD="" docker compose up
+BASIC_AUTH_USERNAME="" BASIC_AUTH_PASSWORD="" docker-compose up
 ```
 
 Note: [basic auth](https://docs.airbyte.com/operator-guides/security#network-security) must be disabled by setting `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD` to empty values, otherwise requests from the development server will fail against the local API.
@@ -207,8 +207,8 @@ The Configuration API caches connector specifications. This is done to avoid nee
 2. From your local `airbyte-platform` repository, restart the server by running the following commands:
 
 ```bash
-VERSION=dev docker compose down -v
-VERSION=dev docker compose up
+VERSION=dev docker-compose down -v
+VERSION=dev docker-compose up
 ```
 
 ### Resetting the Airbyte developer environment
@@ -220,7 +220,7 @@ Sometimes you'll want to reset the data in your local environment. One common ca
 - Delete the datastore volumes in docker
 
   ```bash
-    VERSION=dev docker compose down -v
+    VERSION=dev docker-compose down -v
   ```
 
 - Remove the data on disk
@@ -234,7 +234,7 @@ Sometimes you'll want to reset the data in your local environment. One common ca
 
   ```bash
    SUB_BUILD=PLATFORM ./gradlew clean build
-   VERSION=dev docker compose up -V
+   VERSION=dev docker-compose up -V
   ```
 
 While not as common as the above steps, you may also get into a position where want to erase all of the data on your local docker server. This is useful if you've been modifying image tags while developing.
@@ -274,4 +274,4 @@ env JAVA_HOME=/usr/lib/jvm/java-14-openjdk ./gradlew  :airbyte-integrations:conn
 
 ### Inspecting the messages passed between connectors
 
-From your local `airbyte-platform` repository, you can enable `LOG_CONNECTOR_MESSAGES=true` to log the messages the Airbyte platform receives from the source and destination when debugging locally. e.g. `LOG_CONNECTOR_MESSAGES=true VERSION=dev docker compose up`
+From your local `airbyte-platform` repository, you can enable `LOG_CONNECTOR_MESSAGES=true` to log the messages the Airbyte platform receives from the source and destination when debugging locally. e.g. `LOG_CONNECTOR_MESSAGES=true VERSION=dev docker-compose up`

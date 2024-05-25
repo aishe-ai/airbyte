@@ -20,8 +20,8 @@ We will also be setting up a **Remote JVM Debug** run configuration in IntelliJ 
 
 ### Docker Compose Extension
 
-By default, the `docker compose` command will look for a `docker-compose.yaml` file in your directory and execute its instructions. However, you can
-provide multiple files to the `docker compose` command with the `-f` option. You can read more about how Docker compose combines or overrides values when
+By default, the `docker-compose` command will look for a `docker-compose.yaml` file in your directory and execute its instructions. However, you can
+provide multiple files to the `docker-compose` command with the `-f` option. You can read more about how Docker compose combines or overrides values when
 you provide multiple files [on Docker's Website](https://docs.docker.com/compose/extends/).
 
 In the Airbyte repo, there is already another file `docker-compose.debug.yaml` which extends the `docker-compose.yaml` file. Our goal is to set the  
@@ -35,13 +35,13 @@ server:
 ```
 
 What this is saying is: For the Service `server` add an environment variable `JAVA_TOOL_OPTIONS` with the value of the variable `DEBUG_SERVER_JAVA_OPTIONS`.
-`DEBUG_SERVER_JAVA_OPTIONS` has no default value, so if we don't provide one, `JAVA_TOOL_OPTIONS` will be blank or empty. When running the `docker compose` command,
+`DEBUG_SERVER_JAVA_OPTIONS` has no default value, so if we don't provide one, `JAVA_TOOL_OPTIONS` will be blank or empty. When running the `docker-compose` command,
 Docker will look to your local environment variables, to see if you have set a value for `DEBUG_SERVER_JAVA_OPTIONS` and copy that value. To set this value
-you can either `export` the variable in your environment prior to running the `docker compose` command, or prepend the variable to the command. For our debugging purposes,
+you can either `export` the variable in your environment prior to running the `docker-compose` command, or prepend the variable to the command. For our debugging purposes,
 we want the value to be `-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005` so to connect our debugger to the `server` container, run the following:
 
 ```bash
-DEBUG_SERVER_JAVA_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005" VERSION="dev" docker compose -f docker-compose.yaml -f docker-compose.debug.yaml up
+DEBUG_SERVER_JAVA_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005" VERSION="dev" docker-compose -f docker-compose.yaml -f docker-compose.debug.yaml up
 ```
 
 > **Note**
@@ -52,7 +52,7 @@ DEBUG_SERVER_JAVA_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y
 Now we need to connect our debugger. In IntelliJ, open `Edit Configurations...` from the run menu (Or search for `Edit Configurations` in the command palette).
 Create a new _Remote JVM Debug_ Run configuration. The `host` option defaults to `localhost` which if you're on Linux you can leave this unchanged.
 On a Mac however, you need to find the IP address of your container. **Make sure you've installed and started the [Docker Mac Connect](https://github.com/chipmk/docker-mac-net-connect)
-service prior to running the `docker compose` command**. With your containers running, run the following command to easily fetch the IP addresses:
+service prior to running the `docker-compose` command**. With your containers running, run the following command to easily fetch the IP addresses:
 
 ```bash
 $ docker inspect $(docker ps -q ) --format='{{ printf "%-50s" .Name}} {{printf "%-50s" .Config.Image}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
@@ -92,11 +92,11 @@ worker:
     - DEBUG_CONTAINER_JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005
 ```
 
-Similar to the previous debugging example, we want to pass an environment variable to the `docker compose` command. This time we're setting the
+Similar to the previous debugging example, we want to pass an environment variable to the `docker-compose` command. This time we're setting the
 `DEBUG_CONTAINER_IMAGE` environment variable to the name of the container we're targeting. For our example that is `destination-postgres` so run the command:
 
 ```bash
-DEBUG_CONTAINER_IMAGE="destination-postgres:5005" VERSION="dev" docker compose -f docker-compose.yaml -f docker-compose.debug.yaml up
+DEBUG_CONTAINER_IMAGE="destination-postgres:5005" VERSION="dev" docker-compose -f docker-compose.yaml -f docker-compose.debug.yaml up
 ```
 
 The `worker` container now has an environment variable `DEBUG_CONTAINER_IMAGE` with a value of `destination-postgres` which when it compares when it is

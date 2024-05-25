@@ -19,18 +19,18 @@ PS4="$blue_text""${0}:${LINENO}: ""$default_text"
 Help()
 {
    # Display Help
-   echo -e "This Script will download the necessary files for running docker compose"
-   echo -e "It will also run docker compose up"
+   echo -e "This Script will download the necessary files for running docker-compose"
+   echo -e "It will also run docker-compose up"
    echo -e "Take Warning! These assets may become stale over time!"
    echo
    # $0 is the currently running program
    echo -e "Syntax: $0"
    echo -e "options:"
-   echo -e "   -d --download    Only download files - don't run docker compose"
+   echo -e "   -d --download    Only download files - don't run docker-compose"
    echo -e "   -r --refresh     ${red_text}DELETE${default_text} existing assets and re-download new ones"
    echo -e "   -h --help        Print this Help."
    echo -e "   -x --debug       Verbose mode."
-   echo -e "   -b --background  Run docker compose up in detached mode."
+   echo -e "   -b --background  Run docker-compose up in detached mode."
    echo -e "      --dnt         Disable telemetry collection"
    echo -e ""
 }
@@ -120,7 +120,7 @@ TelemetryDockerUp()
   # for up to 1200 seconds (20 minutes), check to see if the server services is in a running state
   end=$((SECONDS+1200))
   while [ $SECONDS -lt $end ]; do
-    webappState=$(docker compose ps --all --format "{{.Service}}:{{.State}}" 2>/dev/null | grep server | cut -d ":" -f2 | xargs)
+    webappState=$(docker-compose ps --all --format "{{.Service}}:{{.State}}" 2>/dev/null | grep server | cut -d ":" -f2 | xargs)
     if [ "$webappState" = "running" ]; then
       TelemetrySend $eventStateSuccess $eventTypeInstall
       break
@@ -304,9 +304,9 @@ if test $(tput cols) -ge 64; then
 fi
 
 ########## Dependency Check ##########
-if ! docker compose version >/dev/null 2>/dev/null; then
-  echo -e "$red_text""docker compose v2 not found! please install docker compose!""$default_text"
-  TelemetrySend $eventStateFailed $eventTypeInstall "docker compose not installed"
+if ! docker-compose version >/dev/null 2>/dev/null; then
+  echo -e "$red_text""docker-compose v2 not found! please install docker-compose!""$default_text"
+  TelemetrySend $eventStateFailed $eventTypeInstall "docker-compose not installed"
   exit 1
 fi
 
@@ -324,25 +324,25 @@ done
 echo
 echo -e "$blue_text""Starting Docker Compose""$default_text"
 if [ -z "$dockerDetachedMode" ]; then
-  # if running in docker-detach mode, kick off a background task as `docker compose up` will be a blocking
+  # if running in docker-detach mode, kick off a background task as `docker-compose up` will be a blocking
   # call and we'll have no way to determine when we've successfully started.
   TelemetryDockerUp &
 fi
 
-docker compose up $dockerDetachedMode
+docker-compose up $dockerDetachedMode
 
-# $? is the exit code of the last command. So here: docker compose up
+# $? is the exit code of the last command. So here: docker-compose up
 if test $? -ne 0; then
   echo -e "$red_text""Docker compose failed.  If you are seeing container conflicts""$default_text"
   echo -e "$red_text""please consider removing old containers""$default_text"
-  TelemetrySend $eventStateFailed $eventTypeInstall "docker compose failed"
+  TelemetrySend $eventStateFailed $eventTypeInstall "docker-compose failed"
 else
   TelemetrySend $eventStateSuccess $eventTypeInstall
 fi
 
 ########## Ending Docker ##########
 if [ -z "$dockerDetachedMode" ]; then
-  docker compose down
+  docker-compose down
 else
   echo -e "$blue_text""Airbyte containers are running!""$default_text"
 fi

@@ -33,7 +33,7 @@ If you haven’t started Kestra yet, download [the Docker Compose file](https://
 curl -o docker-compose.yml https://raw.githubusercontent.com/kestra-io/kestra/develop/docker-compose.yml
 ```
 
-Then, run `docker compose up -d` and [navigate to the UI](http://localhost:8080/). You can start [building your first flows](https://kestra.io/docs/getting-started) using the integrated code editor in the UI.
+Then, run `docker-compose up -d` and [navigate to the UI](http://localhost:8080/). You can start [building your first flows](https://kestra.io/docs/getting-started) using the integrated code editor in the UI.
 
 ![airbyte_kestra_CLI](../.gitbook/assets/airbyte_kestra_1.gif)
 

@@ -47,7 +47,7 @@ In the terminal connected to your OCI Instance for Airbyte, run the following co
 ```bash
 sudo yum install -y docker-compose-plugin
 
-docker compose version
+docker-compose version
 ```
 
 ## Install and start Airbyte

@@ -39,7 +39,7 @@ public class IcebergHiveCatalogS3ParquetIntegrationTest extends DestinationAccep
     metastoreCompose.start();
     config = metastoreCompose.getComposeConfig(DataFileFormat.PARQUET);
     IcebergIntegrationTestUtil.createS3WarehouseBucket(config);
-    LOGGER.info("==> Started Hive Metastore docker compose containers...");
+    LOGGER.info("==> Started Hive Metastore docker-compose containers...");
 
   }
 

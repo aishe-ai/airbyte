@@ -53,7 +53,7 @@ Airbyte version 0.40.27 or later requires [Docker Compose V2](https://docs.docke
 1. In a terminal, on the host where Airbyte is running, turn off Airbyte.
 
    ```bash
-   docker compose down
+   docker-compose down
    ```
 
 2. Upgrade the docker instance to new version.

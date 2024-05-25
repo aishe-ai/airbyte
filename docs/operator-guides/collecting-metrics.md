@@ -141,7 +141,7 @@ DD_AGENT_HOST=dd-agent
 DD_DOGSTATSD_PORT=8125
 ```
 
-5. **Re-deploy Airbyte and the Datadog Agent**: With the updated configurations, you're ready to deploy your Airbyte application by running `docker compose up`.
+5. **Re-deploy Airbyte and the Datadog Agent**: With the updated configurations, you're ready to deploy your Airbyte application by running `docker-compose up`.
 
 ## Airbyte OpenTelemetry Integration
 
@@ -190,7 +190,7 @@ METRIC_CLIENT=otel
 OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
 ```
 
-4. **Re-deploy Airbyte**: With the updated configurations, you're ready to deploy your Airbyte application by running `docker compose up`.
+4. **Re-deploy Airbyte**: With the updated configurations, you're ready to deploy your Airbyte application by running `docker-compose up`.
 
 ### Helm Chart Setup Instructions
 

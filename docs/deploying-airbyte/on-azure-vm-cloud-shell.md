@@ -43,7 +43,7 @@ Install Docker and Docker Compose in the VM:
 5. Check Docker Compose version:
 
    ```bash
-   docker compose version
+   docker-compose version
    ```
 
 6. Close the SSH connection to ensure that the group modification is considered:

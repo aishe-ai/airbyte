@@ -1120,7 +1120,7 @@ If the Airbyte server isn't already running, start it by running **from the Airb
 root**:
 
 ```bash
-docker compose up
+docker-compose up
 ```
 
 When Airbyte server is done starting up, it prints the following banner in the log output \(it can
@@ -1142,7 +1142,7 @@ airbyte-server      |
 ```
 
 After you see the above banner printed out in the terminal window where you are running
-`docker compose up`, visit [http://localhost:8000](http://localhost:8000) in your browser and log in
+`docker-compose up`, visit [http://localhost:8000](http://localhost:8000) in your browser and log in
 with the default credentials: username `airbyte` and password `password`.
 
 If this is the first time using the Airbyte UI, then you will be prompted to go through a first-time

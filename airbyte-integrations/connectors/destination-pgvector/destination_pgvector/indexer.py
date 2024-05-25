@@ -13,8 +13,6 @@ from destination_pgvector.data_model import DataSource, create_data_source, docu
 from destination_pgvector.database import get_engine, get_test_data
 from destination_pgvector.config import ConfigModel
 
-# indexing=IVFFlatIndexingModel(mode='ivfflat') database=DatabaseConfigModel(host='localhost', port=5432, database='aisheAI', username='aisheAI', password=SecretStr('**********')) embedding=OpenAIEmbeddingConfigModel(mode='openai', openai_key='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') processing=ProcessingConfigModel(chunk_size=1024, chunk_overlap=0, text_fields=['title', 'content.body'], metadata_fields=['author', 'publish_date'], text_splitter=SeparatorSplitterConfigModel(mode='separator', separators=['"\\n\\n"', '"\\n"', '" "', '"."'], keep_separator=False), field_name_mappings=[])
-
 
 class PGVectorIndexer(Indexer):
     def __init__(self, config: ConfigModel):

@@ -60,7 +60,7 @@ sudo usermod -a -G docker $USER
 
 ```bash
 sudo apt-get -y install docker-compose-plugin
-docker compose version
+docker-compose version
 ```
 
 8.  Close the SSH connection on your VM instance to ensure the group modification is taken into account by following the below command in your VM terminal:

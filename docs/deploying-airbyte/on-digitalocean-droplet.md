@@ -32,7 +32,7 @@ To deploy Airbyte Open Source on DigitalOcean:
 
 ```bash
     sudo apt install docker-compose-plugin
-    docker compose version
+    docker-compose version
 ```
 
 ## Install Airbyte

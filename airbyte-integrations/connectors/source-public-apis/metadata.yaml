@@ -2,6 +2,10 @@ data:
   allowedHosts:
     hosts:
       - "*"
+  remoteRegistries:
+    pypi:
+      enabled: true
+      packageName: airbyte-source-public-apis
   registries:
     cloud:
       enabled: false
@@ -23,5 +27,14 @@ data:
   releaseStage: alpha
   supportLevel: community
   tags:
-    - language:lowcode
+    - language:python
+    - cdk:low-code
+  connectorTestSuitesOptions:
+    - suite: acceptanceTests
+      testSecrets:
+        - name: SECRET_SOURCE-PUBLIC-APIS__CREDS
+          fileName: config.json
+          secretStore:
+            type: GSM
+            alias: airbyte-connector-testing-secret-store
 metadataSpecVersion: "1.0"

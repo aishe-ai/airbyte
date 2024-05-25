@@ -39,7 +39,7 @@ public class IcebergHiveCatalogS3AvroIntegrationTest extends DestinationAcceptan
     metastoreCompose.start();
     config = metastoreCompose.getComposeConfig(DataFileFormat.AVRO);
     IcebergIntegrationTestUtil.createS3WarehouseBucket(config);
-    LOGGER.info("==> Started Hive Metastore docker compose containers...");
+    LOGGER.info("==> Started Hive Metastore docker-compose containers...");
 
   }
 

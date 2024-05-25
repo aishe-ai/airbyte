@@ -67,6 +67,10 @@ function getSourceConnectors() {
   return getFilenamesInDir("integrations/sources/", sourcesDocs, [
     "readme",
     "postgres",
+<<<<<<< HEAD
+=======
+    "mongodb-v2",
+>>>>>>> e2565fe21ccf87367410e405e2ac059c1dcb36ce
     "mysql",
   ]);
 }
@@ -74,6 +78,8 @@ function getSourceConnectors() {
 function getDestinationConnectors() {
   return getFilenamesInDir("integrations/destinations/", destinationDocs, [
     "readme",
+    "s3",
+    "postgres",
   ]);
 }
 
@@ -98,6 +104,27 @@ const sourcePostgres = {
   ],
 };
 
+const sourceMongoDB = {
+  type: "category",
+  label: "Mongo DB",
+  link: {
+    type: "doc",
+    id: "integrations/sources/mongodb-v2",
+  },
+  items: [
+    {
+      type: "doc",
+      label: "Migration Guide",
+      id: "integrations/sources/mongodb-v2/mongodb-v2-migrations",
+    },
+    {
+      type: "doc",
+      label: "Troubleshooting",
+      id: "integrations/sources/mongodb-v2/mongodb-v2-troubleshooting",
+    },
+  ],
+};
+
 const sourceMysql = {
   type: "category",
   label: "MySQL",
@@ -110,6 +137,38 @@ const sourceMysql = {
       type: "doc",
       label: "Troubleshooting",
       id: "integrations/sources/mysql/mysql-troubleshooting",
+    },
+  ],
+};
+
+const destinationS3 = {
+  type: "category",
+  label: "S3",
+  link: {
+    type: "doc",
+    id: "integrations/destinations/s3",
+  },
+  items: [
+    {
+      type: "doc",
+      label: "Troubleshooting",
+      id: "integrations/destinations/s3/s3-troubleshooting",
+    },
+  ],
+};
+
+const destinationPostgres = {
+  type: "category",
+  label: "Postgres",
+  link: {
+    type: "doc",
+    id: "integrations/destinations/postgres",
+  },
+  items: [
+    {
+      type: "doc",
+      label: "Troubleshooting",
+      id: "integrations/destinations/postgres/postgres-troubleshooting",
     },
   ],
 };
@@ -278,9 +337,18 @@ const connectorCatalog = {
         type: "doc",
         id: "integrations/sources/README",
       },
+<<<<<<< HEAD
       items: [sourcePostgres, sourceMysql, ...getSourceConnectors()].sort(
         (itemA, itemB) => itemA.label.localeCompare(itemB.label)
       ),
+=======
+      items: [
+        sourcePostgres,
+        sourceMongoDB,
+        sourceMysql,
+        ...getSourceConnectors(),
+      ].sort((itemA, itemB) => itemA.label.localeCompare(itemB.label)),
+>>>>>>> e2565fe21ccf87367410e405e2ac059c1dcb36ce
     },
     {
       type: "category",
@@ -289,7 +357,11 @@ const connectorCatalog = {
         type: "doc",
         id: "integrations/destinations/README",
       },
-      items: getDestinationConnectors(),
+      items: [
+        destinationS3,
+        destinationPostgres,
+        ...getDestinationConnectors(),
+      ].sort((itemA, itemB) => itemA.label.localeCompare(itemB.label)),
     },
     {
       type: "doc",
@@ -333,8 +405,8 @@ const deployAirbyte = {
   items: [
     {
       type: "doc",
-      label: "On your local machine",
-      id: "deploying-airbyte/local-deployment",
+      label: "Quickstart",
+      id: "deploying-airbyte/quickstart",
     },
     {
       type: "doc",

@@ -60,7 +60,11 @@ class BaseDocumentTableTemplate(SQLModel, table=False):
     description: Optional[str] = None
     url: Optional[str] = None
     context_data: dict = Field(sa_column=Column(JSONB))
-    data_source_uuid: uuid_pkg.UUID = Field(sa_column=Column(SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")))
+    data_source_uuid: uuid_pkg.UUID = Field(
+        sa_column=Column(
+            SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")
+        )
+    )
     # hardcoded because not setable in openai api
     embeddings: List[float] = Field(sa_column=Column(Vector(1536)))
     content: Optional[str] = None
@@ -86,7 +90,11 @@ def create_mock_organization(org_name=None, member_name=None, member_email=None)
     member_email = member_email or f"user{random.randint(1, 1000)}@example.com"
 
     # Create an Organization instance
-    organization = Organization(uuid=str(uuid.uuid4()), name=org_name, description=f"Description {random.randint(1, 1000)}")
+    organization = Organization(
+        uuid=str(uuid.uuid4()),
+        name=org_name,
+        description=f"Description {random.randint(1, 1000)}",
+    )
 
     # Create a Member instance
     member = Member(
@@ -148,7 +156,11 @@ def document_table_factory(organization, data_source) -> SQLModel:
     class DocumentTableTemplate(BaseDocumentTableTemplate, table=True):
         __tablename__ = f"document_table__{organization.name}_{data_source.name}"  #
         __table_args__ = {"extend_existing": True}  # Add this line
-        data_source_uuid: uuid_pkg.UUID = Field(sa_column=Column(SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")))
+        data_source_uuid: uuid_pkg.UUID = Field(
+            sa_column=Column(
+                SQLAlchemyUUID, ForeignKey("datasource.uuid", ondelete="CASCADE")
+            )
+        )
 
     # Define the pgvector index for the subclass
     Index(

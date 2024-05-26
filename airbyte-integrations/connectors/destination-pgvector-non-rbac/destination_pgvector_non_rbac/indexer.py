@@ -9,7 +9,12 @@ from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
 
 from sqlmodel import Session, select
 
-from destination_pgvector_non_rbac.data_model import DataSource, create_data_source, document_table_factory, create_document
+from destination_pgvector_non_rbac.data_model import (
+    DataSource,
+    create_data_source,
+    document_table_factory,
+    create_document,
+)
 from destination_pgvector_non_rbac.database import get_engine, get_test_data
 from destination_pgvector_non_rbac.config import ConfigModel
 
@@ -42,12 +47,17 @@ class PGVectorIndexer(Indexer):
                 data_source_name = configured_stream.stream.name
 
                 # Check if the data source entry exists and is linked to the current organization
-                statement = select(DataSource).where(DataSource.name == data_source_name, DataSource.organization_uuid == organization.uuid)
+                statement = select(DataSource).where(
+                    DataSource.name == data_source_name,
+                    DataSource.organization_uuid == organization.uuid,
+                )
                 data_source = session.exec(statement).first()
                 if not data_source:
                     # Handle the case where the data source does not exist or is not linked to the current organization
                     logging.info("Creating new data source")
-                    data_source = create_data_source(name=data_source_name, organization=organization)
+                    data_source = create_data_source(
+                        name=data_source_name, organization=organization
+                    )
                     session.add(data_source)
                     session.commit()
 
@@ -77,7 +87,10 @@ class PGVectorIndexer(Indexer):
 
         with Session(self.db_engine) as session:
             # Check if the data source entry exists and is linked to the current organization
-            statement = select(DataSource).where(DataSource.name == data_source_name, DataSource.organization_uuid == organization.uuid)
+            statement = select(DataSource).where(
+                DataSource.name == data_source_name,
+                DataSource.organization_uuid == organization.uuid,
+            )
             data_source = session.exec(statement).first()
 
             # print(document_chunks)

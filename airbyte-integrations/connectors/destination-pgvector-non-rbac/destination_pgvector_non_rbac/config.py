@@ -26,7 +26,9 @@ class IVFFlatIndexingModel(BaseModel):
 
     class Config:
         title = "IVFFlat Indexing"
-        schema_extra = {"description": "Use Inverted File Indexing with a flat encoding (IVFFlat)."}
+        schema_extra = {
+            "description": "Use Inverted File Indexing with a flat encoding (IVFFlat)."
+        }
 
 
 class HNSWIndexingModel(BaseModel):
@@ -34,19 +36,34 @@ class HNSWIndexingModel(BaseModel):
 
     class Config:
         title = "HNSW Indexing"
-        schema_extra = {"description": "Use Hierarchical Navigable Small World (HNSW) indexing method. Only this one will work!"}
+        schema_extra = {
+            "description": "Use Hierarchical Navigable Small World (HNSW) indexing method. Only this one will work!"
+        }
 
 
 pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
 
 
 class DatabaseConfigModel(BaseModel):
-    host: str = Field(..., title="Host", description="The host address of the database.")
-    port: int = Field(default=5432, title="Port", description="The port number on which the database server is running.")
+    host: str = Field(
+        ..., title="Host", description="The host address of the database."
+    )
+    port: int = Field(
+        default=5432,
+        title="Port",
+        description="The port number on which the database server is running.",
+    )
     database: str = Field(..., title="Name", description="The name of the database.")
-    username: str = Field(..., title="Username", description="The username used to authenticate with the database.")
+    username: str = Field(
+        ...,
+        title="Username",
+        description="The username used to authenticate with the database.",
+    )
     password: SecretStr = Field(
-        ..., title="Password", airbyte_secret=True, description="The password used to authenticate with the database."
+        ...,
+        title="Password",
+        airbyte_secret=True,
+        description="The password used to authenticate with the database.",
     )
 
     class Config:
@@ -70,7 +87,14 @@ class ConfigModel(BaseModel):
         FakeEmbeddingConfigModel,
         AzureOpenAIEmbeddingConfigModel,
         OpenAICompatibleEmbeddingConfigModel,
-    ] = Field(..., title="Embedding", description="Embedding configuration", discriminator="mode", group="embedding", type="object")
+    ] = Field(
+        ...,
+        title="Embedding",
+        description="Embedding configuration",
+        discriminator="mode",
+        group="embedding",
+        type="object",
+    )
     processing: ProcessingConfigModel
 
     class Config:

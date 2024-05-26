@@ -7,7 +7,11 @@ from sqlalchemy import text
 from pydantic import ValidationError
 
 
-from destination_pgvector_non_rbac.data_model import create_mock_organization, Organization, Member
+from destination_pgvector_non_rbac.data_model import (
+    create_mock_organization,
+    Organization,
+    Member,
+)
 from destination_pgvector_non_rbac.config import pgvector_indexes
 
 
@@ -21,7 +25,9 @@ def migrate(config):
 
         # Create all tables, except the document table template
         tables_to_create = [
-            table for table in SQLModel.metadata.sorted_tables if table.name not in ["documenttabletemplate", "basedocumenttabletemplate"]
+            table
+            for table in SQLModel.metadata.sorted_tables
+            if table.name not in ["documenttabletemplate", "basedocumenttabletemplate"]
         ]
         SQLModel.metadata.create_all(connection, tables=tables_to_create)
 
@@ -51,7 +57,9 @@ def get_test_data(engine):
 
         # If test data not found, create and store it
         if not test_org or not test_member:
-            test_org, test_member = create_test_data(engine, test_org_name, test_member_name, test_member_email)
+            test_org, test_member = create_test_data(
+                engine, test_org_name, test_member_name, test_member_email
+            )
 
         return test_org, test_member
 
@@ -59,7 +67,9 @@ def get_test_data(engine):
 def create_test_data(engine, test_org_name, test_member_name, test_member_email):
     with Session(engine) as session:
         test_org, test_member = create_mock_organization(
-            org_name=test_org_name, member_name=test_member_name, member_email=test_member_email
+            org_name=test_org_name,
+            member_name=test_member_name,
+            member_email=test_member_email,
         )
         session.add(test_org)
         session.commit()

@@ -41,9 +41,6 @@ class HNSWIndexingModel(BaseModel):
         }
 
 
-pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
-
-
 class DatabaseConfigModel(BaseModel):
     host: str = Field(
         ..., title="Host", description="The host address of the database."
@@ -70,12 +67,16 @@ class DatabaseConfigModel(BaseModel):
         schema_extra = {"group": "database"}
 
 
+# pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
+pgvector_indexes = Union[HNSWIndexingModel]
+
+
 class ConfigModel(BaseModel):
     indexing: pgvector_indexes = Field(
         ...,
         title="Indexing",
         description="Indexing configuration, see [Repo](https://github.com/pgvector/pgvector#indexing)",
-        discriminator="mode",
+        # discriminator="mode",
         group="indexing",
         type="object",
     )

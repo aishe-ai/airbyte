@@ -10,12 +10,15 @@ from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
 from sqlmodel import Session, select
 
 from destination_pgvector_non_rbac.data_model import (
-    DataSource,
-    create_data_source,
-    document_table_factory,
-    create_document,
+    Document,
+    # DataSource,
+    # create_data_source,
+    # document_table_factory,
+    # create_document,
 )
-from destination_pgvector_non_rbac.database import get_engine, get_test_data
+
+# from destination_pgvector_non_rbac.database import get_engine, get_test_data
+from destination_pgvector_non_rbac.database import get_engine
 from destination_pgvector_non_rbac.config import ConfigModel
 
 
@@ -32,38 +35,31 @@ class PGVectorIndexer(Indexer):
         Each record has a metadata field with the name airbyte_cdk.destinations.vector_db_based.document_processor.METADATA_STREAM_FIELD which can be used to filter documents for deletion.
         Use the airbyte_cdk.destinations.vector_db_based.utils.create_stream_identifier method to create the stream identifier based on the stream definition to use for filtering.
         """
-        # TODO: handle dynamic index changes for embeddings here, provided by frontend
+        # # Check for test or dev environment
+        # if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
+        #     organization, test_member = get_test_data(self.db_engine)
 
-        # Step 1: Retrieve the current index configuration from the database
-        desired_embedding_index = self.config.indexing.mode
+        # with Session(self.db_engine) as session:
+        #     for configured_stream in catalog.streams:
+        #         # Extract the name of the stream
+        #         data_source_name = configured_stream.stream.name
 
-        # Check for test or dev environment
-        if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
-            organization, test_member = get_test_data(self.db_engine)
+        #         # Check if the data source entry exists and is linked to the current organization
+        #         statement = select(DataSource).where(
+        #             DataSource.name == data_source_name,
+        #             DataSource.organization_uuid == organization.uuid,
+        #         )
+        #         data_source = session.exec(statement).first()
+        #         if not data_source:
+        #             # Handle the case where the data source does not exist or is not linked to the current organization
+        #             logging.info("Creating new data source")
+        #             data_source = create_data_source(name=data_source_name, organization=organization)
+        #             session.add(data_source)
+        #             session.commit()
 
-        with Session(self.db_engine) as session:
-            for configured_stream in catalog.streams:
-                # Extract the name of the stream
-                data_source_name = configured_stream.stream.name
-
-                # Check if the data source entry exists and is linked to the current organization
-                statement = select(DataSource).where(
-                    DataSource.name == data_source_name,
-                    DataSource.organization_uuid == organization.uuid,
-                )
-                data_source = session.exec(statement).first()
-                if not data_source:
-                    # Handle the case where the data source does not exist or is not linked to the current organization
-                    logging.info("Creating new data source")
-                    data_source = create_data_source(
-                        name=data_source_name, organization=organization
-                    )
-                    session.add(data_source)
-                    session.commit()
-
-                # Construct the document table if not created yet
-                document_table = document_table_factory(organization, data_source)
-                document_table.metadata.create_all(self.db_engine)
+        #         # Construct the document table if not created yet
+        #         document_table = document_table_factory(organization, data_source)
+        #         document_table.metadata.create_all(self.db_engine)
         pass
 
     def post_sync(self):
@@ -82,22 +78,22 @@ class PGVectorIndexer(Indexer):
         """
         # explizit indexing not needed, done by postgres and pgvector index
         # TODO: Generalize after langchain integration
-        if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
-            organization, test_member = get_test_data(self.db_engine)
+        # if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
+        #     organization, test_member = get_test_data(self.db_engine)
 
-        with Session(self.db_engine) as session:
-            # Check if the data source entry exists and is linked to the current organization
-            statement = select(DataSource).where(
-                DataSource.name == data_source_name,
-                DataSource.organization_uuid == organization.uuid,
-            )
-            data_source = session.exec(statement).first()
+        # with Session(self.db_engine) as session:
+        #     # Check if the data source entry exists and is linked to the current organization
+        #     statement = select(DataSource).where(
+        #         DataSource.name == data_source_name,
+        #         DataSource.organization_uuid == organization.uuid,
+        #     )
+        #     data_source = session.exec(statement).first()
 
-            # print(document_chunks)
-            for raw_document in document_chunks:
-                docObject = create_document(organization, data_source, raw_document)
-                session.add(docObject)
-                session.commit()
+        #     # print(document_chunks)
+        #     for raw_document in document_chunks:
+        #         docObject = create_document(organization, data_source, raw_document)
+        #         session.add(docObject)
+        #         session.commit()
 
         pass
 

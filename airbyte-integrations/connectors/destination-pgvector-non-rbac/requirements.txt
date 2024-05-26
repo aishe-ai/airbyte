@@ -2,7 +2,6 @@ airbyte-cdk
 langchain==0.0.271
 sqlmodel
 pydantic
-psycopg2-binary
 python-dotenv
 pytest
 pydantic[email]

@@ -26,9 +26,7 @@ class IVFFlatIndexingModel(BaseModel):
 
     class Config:
         title = "IVFFlat Indexing"
-        schema_extra = {
-            "description": "Use Inverted File Indexing with a flat encoding (IVFFlat)."
-        }
+        schema_extra = {"description": "Use Inverted File Indexing with a flat encoding (IVFFlat)."}
 
 
 class HNSWIndexingModel(BaseModel):
@@ -36,15 +34,11 @@ class HNSWIndexingModel(BaseModel):
 
     class Config:
         title = "HNSW Indexing"
-        schema_extra = {
-            "description": "Use Hierarchical Navigable Small World (HNSW) indexing method. Only this one will work!"
-        }
+        schema_extra = {"description": "Use Hierarchical Navigable Small World (HNSW) indexing method. Only this one will work!"}
 
 
 class DatabaseConfigModel(BaseModel):
-    host: str = Field(
-        ..., title="Host", description="The host address of the database."
-    )
+    host: str = Field(..., title="Host", description="The host address of the database.")
     port: int = Field(
         default=5432,
         title="Port",
@@ -67,9 +61,8 @@ class DatabaseConfigModel(BaseModel):
         schema_extra = {"group": "database"}
 
 
-# pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
 # only hnsw is working!!
-pgvector_indexes = Union[HNSWIndexingModel]
+pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
 
 
 class ConfigModel(BaseModel):
@@ -77,7 +70,7 @@ class ConfigModel(BaseModel):
         ...,
         title="Indexing",
         description="Indexing configuration, see [Repo](https://github.com/pgvector/pgvector#indexing)",
-        # discriminator="mode",
+        discriminator="mode",
         group="indexing",
         type="object",
     )

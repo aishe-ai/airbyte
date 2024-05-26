@@ -46,19 +46,6 @@ class PGVectorIndexer(Indexer):
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
-
-        # Chunk(
-        #     page_content='title: value1',
-        #     metadata={'_ab_stream': 'example_stream'},
-        #     record=AirbyteRecordMessage(
-        #         namespace=None,
-        #         stream='example_stream',
-        #         data={'title': 'value1', 'field2': 'value2'},
-        #         emitted_at=1625383200000),
-        #     embedding=[]
-        # )
-        print(namespace, data_source_name)
-        # None example_stream
         with Session(self.db_engine) as session:
             # Check if the data source entry exists and is linked to the current organization
             for raw_document in document_chunks:

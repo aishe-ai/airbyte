@@ -68,6 +68,7 @@ class DatabaseConfigModel(BaseModel):
 
 
 # pgvector_indexes = Union[IVFFlatIndexingModel, HNSWIndexingModel]
+# only hnsw is working!!
 pgvector_indexes = Union[HNSWIndexingModel]
 
 

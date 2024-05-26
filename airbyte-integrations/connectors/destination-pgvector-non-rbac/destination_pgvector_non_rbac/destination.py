@@ -73,14 +73,10 @@ class DestinationPgvectorNonRbac(Destination):
 
         config_model = ConfigModel.parse_obj(config)
         self._init(config_model)
-        writer = Writer(
-            config_model.processing, self.indexer, self.embedder, batch_size=BATCH_SIZE
-        )
+        writer = Writer(config_model.processing, self.indexer, self.embedder, batch_size=BATCH_SIZE)
         yield from writer.write(configured_catalog, input_messages)
 
-    def check(
-        self, logger: AirbyteLogger, config: Mapping[str, Any]
-    ) -> AirbyteConnectionStatus:
+    def check(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> AirbyteConnectionStatus:
         """
         Tests if the input configuration can be used to successfully connect to the destination with the needed permissions
             e.g: if a provided API token or password can be used to connect and write to the destination.
@@ -99,41 +95,27 @@ class DestinationPgvectorNonRbac(Destination):
             # Try to connect to the database and check for vector extension
             with engine.connect() as conn:
                 # Check the existence of the vector extension
-                result = conn.execute(
-                    text("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
-                )
+                result = conn.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'"))
                 if result.rowcount == 0:
-                    raise RuntimeError(
-                        "The 'vector' extension is not installed in the PostgreSQL database."
-                    )
+                    raise RuntimeError("The 'vector' extension is not installed in the PostgreSQL database.")
 
             # If the connection is successful and the 'vector' extension exists, return success status
-            logger.info(
-                "Successfully connected to the PostgreSQL database with the 'vector' extension installed."
-            )
+            logger.info("Successfully connected to the PostgreSQL database with the 'vector' extension installed.")
 
             # embedding checks
             self._init(ConfigModel.parse_obj(config))
             embedder_error = self.embedder.check()
             indexer_error = self.indexer.check()
-            errors = [
-                error for error in [embedder_error, indexer_error] if error is not None
-            ]
+            errors = [error for error in [embedder_error, indexer_error] if error is not None]
             if len(errors) > 0:
-                return AirbyteConnectionStatus(
-                    status=Status.FAILED, message="\n".join(errors)
-                )
+                return AirbyteConnectionStatus(status=Status.FAILED, message="\n".join(errors))
             else:
                 return AirbyteConnectionStatus(status=Status.SUCCEEDED)
 
         except Exception as e:
             # If there was an error during the connection attempt, log the error and return failure status
-            logger.error(
-                f"An exception occurred while trying to connect to the PostgreSQL database: {e}"
-            )
-            return AirbyteConnectionStatus(
-                status=Status.FAILED, message=f"An exception occurred: {repr(e)}"
-            )
+            logger.error(f"An exception occurred while trying to connect to the PostgreSQL database: {e}")
+            return AirbyteConnectionStatus(status=Status.FAILED, message=f"An exception occurred: {repr(e)}")
 
     def spec(self, *args: Any, **kwargs: Any) -> ConnectorSpecification:
         return ConnectorSpecification(

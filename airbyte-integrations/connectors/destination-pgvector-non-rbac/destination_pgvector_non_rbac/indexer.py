@@ -1,23 +1,16 @@
 #
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
+import uuid
 
-import os
 import logging
 
 from airbyte_cdk.destinations.vector_db_based.indexer import Indexer
 
-from sqlmodel import Session, select
+from sqlmodel import Session
 
-from destination_pgvector_non_rbac.data_model import (
-    Document,
-    # DataSource,
-    # create_data_source,
-    # document_table_factory,
-    # create_document,
-)
+from destination_pgvector_non_rbac.data_model import create_document_obj
 
-# from destination_pgvector_non_rbac.database import get_engine, get_test_data
 from destination_pgvector_non_rbac.database import get_engine
 from destination_pgvector_non_rbac.config import ConfigModel
 
@@ -35,31 +28,7 @@ class PGVectorIndexer(Indexer):
         Each record has a metadata field with the name airbyte_cdk.destinations.vector_db_based.document_processor.METADATA_STREAM_FIELD which can be used to filter documents for deletion.
         Use the airbyte_cdk.destinations.vector_db_based.utils.create_stream_identifier method to create the stream identifier based on the stream definition to use for filtering.
         """
-        # # Check for test or dev environment
-        # if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
-        #     organization, test_member = get_test_data(self.db_engine)
-
-        # with Session(self.db_engine) as session:
-        #     for configured_stream in catalog.streams:
-        #         # Extract the name of the stream
-        #         data_source_name = configured_stream.stream.name
-
-        #         # Check if the data source entry exists and is linked to the current organization
-        #         statement = select(DataSource).where(
-        #             DataSource.name == data_source_name,
-        #             DataSource.organization_uuid == organization.uuid,
-        #         )
-        #         data_source = session.exec(statement).first()
-        #         if not data_source:
-        #             # Handle the case where the data source does not exist or is not linked to the current organization
-        #             logging.info("Creating new data source")
-        #             data_source = create_data_source(name=data_source_name, organization=organization)
-        #             session.add(data_source)
-        #             session.commit()
-
-        #         # Construct the document table if not created yet
-        #         document_table = document_table_factory(organization, data_source)
-        #         document_table.metadata.create_all(self.db_engine)
+        # not needed currently
         pass
 
     def post_sync(self):
@@ -69,6 +38,7 @@ class PGVectorIndexer(Indexer):
         # not needed currently
         return []
 
+    # explizit indexing not needed, done by postgres and pgvector index
     def index(self, document_chunks, namespace, data_source_name):
         """
         Index a list of document chunks.
@@ -76,24 +46,42 @@ class PGVectorIndexer(Indexer):
         This method should be used to index the documents in the destination.
         All chunks belong to the stream and namespace specified in the parameters.
         """
-        # explizit indexing not needed, done by postgres and pgvector index
-        # TODO: Generalize after langchain integration
-        # if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
-        #     organization, test_member = get_test_data(self.db_engine)
 
-        # with Session(self.db_engine) as session:
-        #     # Check if the data source entry exists and is linked to the current organization
-        #     statement = select(DataSource).where(
-        #         DataSource.name == data_source_name,
-        #         DataSource.organization_uuid == organization.uuid,
-        #     )
-        #     data_source = session.exec(statement).first()
-
-        #     # print(document_chunks)
-        #     for raw_document in document_chunks:
-        #         docObject = create_document(organization, data_source, raw_document)
-        #         session.add(docObject)
-        #         session.commit()
+        # Chunk(
+        #     page_content='title: value1',
+        #     metadata={'_ab_stream': 'example_stream'},
+        #     record=AirbyteRecordMessage(
+        #         namespace=None,
+        #         stream='example_stream',
+        #         data={'title': 'value1', 'field2': 'value2'},
+        #         emitted_at=1625383200000),
+        #     embedding=[]
+        # )
+        print(namespace, data_source_name)
+        # None example_stream
+        with Session(self.db_engine) as session:
+            # Check if the data source entry exists and is linked to the current organization
+            for raw_document in document_chunks:
+                print(raw_document.record)
+                pre_formatted = {
+                    "uuid": str(uuid.uuid4()),
+                    "name": "test",
+                    "description": "test descriptionn",
+                    "url": "test url",
+                    "context_data": raw_document.metadata,
+                    "date_source": data_source_name,
+                    "embeddings": raw_document.embedding,
+                    "page_content": raw_document.page_content,
+                    "ingested_at": raw_document.record.emitted_at,
+                }
+                try:
+                    docObject = create_document_obj(pre_formatted)
+                    session.add(docObject)
+                    session.commit()
+                except Exception as error:
+                    pre_formatted["embeddings"] = []
+                    logging.error(f"Couldnt ingest: {str(pre_formatted)}, because {str(error)}")
+                print("-----------------------")
 
         pass
 
@@ -115,88 +103,3 @@ class PGVectorIndexer(Indexer):
         """
         # not needed currently
         pass
-
-        # engine = migrate(config)
-        # SQLModel.metadata.drop_all(engine)
-        # engine = migrate(config)
-
-        # Create a new session
-        # with Session(engine) as session:
-        #     # Create an organization
-        #     organization = Organization(
-        #         uuid=uuid4(), name="Test Organization", description="A test organization for verifying the write function."
-        #     )
-
-        #     # Create a DataSource related to the organization
-        #     data_source = DataSource(
-        #         uuid=uuid4(), name="Test DataSource", bot_auth_data={"token": "testtoken"}, organization_uuid=organization.uuid
-        #     )
-
-        #     # Create a Document related to the data_source
-        #     document = Document(
-        #         uuid=uuid4(),
-        #         name="Test Document",
-        #         description="A test document for verifying the write function.",
-        #         url="https://example.com/test_document",
-        #         context_data={"info": "test"},
-        #         # embeddings=[0.0] * 128,  # Mocking a vector with 128 dimensions of zeros
-        #         data_source_uuid=data_source.uuid,
-        #         content="Sample content",  # Here, we ensure 'content' is not None
-        #     )
-
-        #     # Create a Member related to the organization
-        #     member = Member(uuid=uuid4(), email="test_user@example.com", name="Test User", organization_uuid=organization.uuid)
-
-        #     # Create a Membership which relates a Member, Document, and DataSource
-        #     membership = Membership(
-        #         uuid=uuid4(),
-        #         data_source_role="viewer",
-        #         namespace_user_name="test_user_namespace",
-        #         data_source_uuid=data_source.uuid,
-        #         member_uuid=member.uuid,
-        #         document_uuid=document.uuid,
-        #     )
-
-        #     # Add all instances to the session and commit the transactions
-        #     session.add(organization)
-        #     session.add(data_source)
-        #     session.add(document)
-        #     session.add(member)
-        #     session.add(membership)
-
-        #     # Flush the changes to the database
-        #     session.commit()
-
-        # print(config, configured_catalog)
-
-        # # Iterate over incoming messages
-        # for message in input_messages:
-        #     print("\n --->", message.record.data["field2"])
-        #     yield message
-
-        # if message.type == Type.RECORD:
-        #     self.insert_record(message, engine)
-
-        # elif message.type == Type.STATE:
-        #     # State message indicates all previous records have been written
-        #     # Only emit the state message here if you have a guarantee the previous records are written
-        #     yield message
-
-    # def insert_record(self, message: AirbyteMessage, engine):
-    #     pass
-    #     # You would implement your insert logic here using SQLModel and switch cases
-    #     # with Session(engine) as session:
-    #     #     # Map the record to your SQLModel class (e.g., YourRecordModel)
-    #     #     record = YourRecordModel(**message.record.data)  # Transform the Airbyte record to your SQLModel instance
-
-    #     #     # Add the record instance to the session and commit
-    #     #     # Ensure your model instances match with your table structures and columns
-    #     #     try:
-    #     #         session.add(record)
-    #     #         session.commit()
-    #     #     except Exception as e:
-    #     #         session.rollback()  # Rollback if any error occurs
-    #     #         # Here you should handle the error (e.g., log to AirbyteLogger, raise a specific exception, etc.)
-
-    # # Note: Make sure the models in your_data_models.py are defined correctly to match the schema of the destination tables.
-    # # This code does not handle specific schema issues, dependencies between tables, or advanced use cases like upserting.

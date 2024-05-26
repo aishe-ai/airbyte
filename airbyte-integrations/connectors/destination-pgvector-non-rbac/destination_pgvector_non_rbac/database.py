@@ -1,12 +1,14 @@
 import os
 import logging
 
-from sqlmodel import create_engine, SQLModel, Session, select, inspect
+from dotenv import load_dotenv
+
+from sqlmodel import create_engine, SQLModel, Session
 from sqlalchemy import text
 
-from destination_pgvector_non_rbac.data_model import (
-    Document,
-)
+from destination_pgvector_non_rbac.data_model import create_document_obj
+
+load_dotenv()
 
 
 def migrate(config):
@@ -23,50 +25,21 @@ def migrate(config):
     logging.info("Created all needed tables")
 
     # Check for test or dev environment
-    # if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
-    #     get_test_data(engine)
+    if os.environ.get("ENVIRONMENT") in ["test", "dev"]:
+        create_test_data(engine)
 
     return engine
 
 
-# def get_test_data(engine):
-#     # Read environment variables
-#     test_org_name = os.environ.get("TEST_ORG_NAME", "Test Organization")
-#     test_member_name = os.environ.get("TEST_MEMBER_NAME", "Test Member")
-#     test_member_email = os.environ.get("TEST_MEMBER_EMAIL", "testmember@example.com")
+def create_test_data(engine):
+    with Session(engine) as session:
+        test_document = create_document_obj()
+        session.add(test_document)
+        session.commit()
 
-#     with Session(engine) as session:
-#         # Query for the test organization
-#         query_org = select(Organization).where(Organization.name == test_org_name)
-#         test_org = session.exec(query_org).first()
+        logging.info("Test data created")
 
-#         # Query for the test member
-#         query_member = select(Member).where(Member.email == test_member_email)
-#         test_member = session.exec(query_member).first()
-
-#         # If test data not found, create and store it
-#         if not test_org or not test_member:
-#             test_org, test_member = create_test_data(engine, test_org_name, test_member_name, test_member_email)
-
-#         return test_org, test_member
-
-
-# def create_test_data(engine, test_org_name, test_member_name, test_member_email):
-#     with Session(engine) as session:
-#         test_org, test_member = create_mock_organization(
-#             org_name=test_org_name,
-#             member_name=test_member_name,
-#             member_email=test_member_email,
-#         )
-#         session.add(test_org)
-#         session.commit()
-
-#         session.add(test_member)
-#         session.commit()
-
-#         logging.info("Test data created")
-
-#         return test_org, test_member
+        return test_document
 
 
 def get_config_value(config, key, default=None):

@@ -10,6 +10,7 @@ out
 .project
 .settings
 .vscode
+.github
 **/gmon.out
 static_checker_reports/
 

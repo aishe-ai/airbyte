@@ -1,0 +1,12 @@
+airbyte-cdk
+langchain==0.0.271
+sqlmodel
+pydantic
+python-dotenv
+pytest
+pydantic[email]
+sqlalchemy<2.0
+pgvector
+airbyte-cdk[vector-db-based]==0.51.41
+polyfactory
+langchain-community==0.0.20

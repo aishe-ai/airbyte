@@ -1,0 +1,31 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "mydatabase",
+    "username": "myusername",
+    "password": "mypassword"
+  },
+  "embedding": {
+    "mode": "openai_compatible",
+    "api_key": "your_openai_compatible_service_api_key",
+    "base_url": "https://your-service-name.com",
+    "model_name": "text-embedding-ada-002",
+    "dimensions": 1536
+  },
+  "processing": {
+    "chunk_size": 1024,
+    "chunk_overlap": 0,
+    "text_fields": ["title", "content.body"],
+    "metadata_fields": ["author", "publish_date"],
+    "text_splitter": {
+      "mode": "separator",
+      "separators": ["\"\\n\\n\"", "\"\\n\"", "\" \"", "\".\""],
+      "keep_separator": false
+    },
+    "field_name_mappings": []
+  },
+  "indexing": {
+    "mode": "hnsw"
+  }
+}

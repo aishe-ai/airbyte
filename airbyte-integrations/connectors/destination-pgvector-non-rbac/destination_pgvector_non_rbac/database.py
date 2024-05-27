@@ -58,7 +58,7 @@ def get_engine(database_config):
             f"postgresql://"
             f"{get_config_value(database_config, 'username', 'default_username')}:"
             f"{get_config_value(database_config, 'password', 'default_password')}@"
-            f"{get_config_value(database_config, 'host', 'default_host')}/"
+            f"{get_config_value(database_config, 'host', 'default_host')}:{get_config_value(database_config, 'port', 'default_port')}/"
             f"{get_config_value(database_config, 'database', 'default_database')}"
         )
         engine = create_engine(database_url)

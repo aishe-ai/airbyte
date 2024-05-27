@@ -10,3 +10,5 @@ pgvector
 airbyte-cdk[vector-db-based]==0.51.41
 polyfactory
 langchain-community==0.0.20
+psycopg2
+psycopg2-binary

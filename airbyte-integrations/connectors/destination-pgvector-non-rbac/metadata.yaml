@@ -17,10 +17,10 @@ data:
   connectorSubtype: database
   connectorType: destination
   definitionId: 766cb6ec-5d7a-4849-8299-700f45fc4f41
-  dockerImageTag: 0.1.0
+  dockerImageTag: 0.0.3
   dockerRepository: airbyte/destination-pgvector-non-rbac
   githubIssueLabel: destination-pgvector-non-rbac
-  icon: pgvector-non-rbac.svg
+  icon: icon.svg
   license: MIT
   name: Pgvector Non Rbac
   releaseDate: TODO

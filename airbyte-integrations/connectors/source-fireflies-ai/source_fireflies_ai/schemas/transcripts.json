@@ -192,9 +192,6 @@
         "bullet_gist": {
           "type": "string"
         },
-        "short_overview": {
-          "type": "string"
-        },
         "action_items": {
           "type": "string"
         },
@@ -211,6 +208,23 @@
           "type": "string"
         }
       }
+    },
+    "fromDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "toDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "participant_email": {
+      "type": "string"
+    },
+    "limit": {
+      "type": "integer"
+    },
+    "skip": {
+      "type": "integer"
     }
   }
 }

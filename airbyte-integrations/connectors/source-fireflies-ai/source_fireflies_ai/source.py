@@ -2,17 +2,18 @@
 # Copyright (c) 2024 Airbyte, Inc., all rights reserved.
 #
 
-
-from abc import ABC
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import requests
+
+from requests import Request, Session
+from datetime import datetime, timezone
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthenticator
 
-from datetime import datetime, timezone
+from abc import ABC
 
 
 def format_datetime(dt_string):
@@ -45,6 +46,7 @@ class FirefliesAiStream(HttpStream, ABC):
 
 
 class Transcripts(FirefliesAiStream):
+    cursor_field = "fromDate"
     primary_key = "id"
 
     def path(self, **kwargs) -> str:
@@ -60,101 +62,126 @@ class Transcripts(FirefliesAiStream):
         next_page_token: Mapping[str, Any] = None,
     ) -> Optional[Mapping]:
         query = """
-        query Transcripts($fromDate: DateTime, $toDate: DateTime, $hostEmail: [String], $participantEmail: [String], $limit: Int, $skip: Int) {
-          transcripts(
-            fromDate: $fromDate
-            toDate: $toDate
-            host_email: $hostEmail
-            participant_email: $participantEmail
-            limit: $limit
-            skip: $skip
-          ) {
-            id
-            sentences {
-              index
-              speaker_name
-              speaker_id
-              text
-              raw_text
-              start_time
-              end_time
-              ai_filters {
-                task
-                pricing
-                metric
-                question
-                date_and_time
-                text_cleanup
-                sentiment
-              }
-            }
-            title
-            speakers {
-              id
-              name
-            }
-            host_email
-            organizer_email
-            meeting_info {
-              fred_joined
-              silent_meeting
-              summary_status
-            }
-            calendar_id
-            user {
-              user_id
-              email
-              name
-              num_transcripts
-              recent_meeting
-              minutes_consumed
-              is_admin
-              integrations
-            }
-            fireflies_users
-            participants
-            date
-            transcript_url
-            audio_url
-            video_url
-            duration
-            meeting_attendees {
-              displayName
-              email
-              phoneNumber
-              name
-              location
-            }
-            summary {
-              gist
-              bullet_gist
-              short_overview
-              action_items
-              keywords
-              outline
-              overview
-              shorthand_bullet
-            }
-          }
-        }
+query Transcripts(
+  $fromDate: DateTime
+  $toDate: DateTime
+  $hostEmail: String
+  $participantEmail: String
+  $limit: Int
+  $skip: Int
+) {
+  transcripts(
+    fromDate: $fromDate
+    toDate: $toDate
+    host_email: $hostEmail
+    participant_email: $participantEmail
+    limit: $limit
+    skip: $skip
+  ) {
+    id
+    sentences {
+      index
+      speaker_name
+      speaker_id
+      text
+      raw_text
+      start_time
+      end_time
+      ai_filters {
+        task
+        pricing
+        metric
+        question
+        date_and_time
+        text_cleanup
+        sentiment
+      }
+    }
+    title
+    speakers {
+      id
+      name
+    }
+    host_email
+    organizer_email
+    meeting_info {
+      fred_joined
+      silent_meeting
+      summary_status
+    }
+    calendar_id
+    user {
+      user_id
+      email
+      name
+      num_transcripts
+      recent_meeting
+      minutes_consumed
+      is_admin
+      integrations
+    }
+    fireflies_users
+    participants
+    transcript_url
+    audio_url
+    video_url
+    duration
+    meeting_attendees {
+      displayName
+      email
+      phoneNumber
+      name
+      location
+    }
+    summary {
+      gist
+      bullet_gist
+      action_items
+      keywords
+      outline
+      overview
+      shorthand_bullet
+    }
+  }
+}
         """
 
         variables = {}
-        # In the request_body_json method:
         if self.config.get("startDate"):
             variables["fromDate"] = format_datetime(self.config["startDate"])
         if self.config.get("endDate"):
             variables["toDate"] = format_datetime(self.config["endDate"])
         if self.config.get("host_emails"):
-            variables["hostEmail"] = self.config["host_emails"]
+            variables["hostEmail"] = self.config["host_emails"][0]
         if self.config.get("participant_emails"):
-            variables["participantEmail"] = self.config["participant_emails"]
+            variables["participantEmail"] = self.config["participant_emails"][0]
         variables["limit"] = 50
         variables["skip"] = next_page_token.get("skip", 0) if next_page_token else 0
 
         request_body = {"query": query, "variables": variables}
-        print(request_body)
         return request_body
+
+    # overwrite needed because of fireflies api needs arent meet by base http class
+    def _fetch_next_page(
+        self,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        stream_state: Optional[Mapping[str, Any]] = None,
+        next_page_token: Optional[Mapping[str, Any]] = None,
+    ) -> Tuple[requests.PreparedRequest, requests.Response]:
+        url = self.url_base
+        headers = self.request_headers()
+        json_body = self.request_body_json(stream_state, stream_slice, next_page_token)
+
+        # Prepare the request
+        session = Session()
+        request = Request(self.request_method(), url, headers=headers, json=json_body)
+        prepared_request = session.prepare_request(request)
+
+        # Send the request
+        response = session.send(prepared_request)
+        response.raise_for_status()
+
+        return prepared_request, response
 
     def request_method(self) -> str:
         return "POST"

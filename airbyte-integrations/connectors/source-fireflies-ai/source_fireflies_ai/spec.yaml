@@ -1,0 +1,54 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Fireflies.ai Source Spec
+  type: object
+  required:
+    - credentials
+  additionalProperties: true
+  properties:
+    credentials:
+      type: object
+      title: API Key
+      description: Enter your Fireflies.ai API Key.
+      required:
+        - api_key
+      properties:
+        api_key:
+          type: string
+          title: API Key
+          description: Your secret API Key for Fireflies.ai.
+          airbyte_secret: true
+      order: 0
+    host_emails:
+      type: array
+      items:
+        type: string
+        format: email
+      title: Host Emails
+      description: List of host emails to match transcripts. Leave empty to match all hosts.
+      examples: ["host1@example.com", "host2@example.com"]
+      order: 1
+    participant_emails:
+      type: array
+      items:
+        type: string
+        format: email
+      title: Participant Emails
+      description: List of participant emails to match transcripts. Leave empty to match all participants.
+      examples: ["participant1@example.com", "participant2@example.com"]
+      order: 2
+    startDate:
+      type: string
+      title: Start Date (UTC)
+      description: Fetch transcripts created after this date. Use ISO 8601 format YYYY-MM-DDTHH:mmZ. Timezone is UTC.
+      examples: ["2024-07-08T22:13Z"]
+      format: date-time
+      order: 3
+    endDate:
+      type: string
+      title: End Date (UTC)
+      description: Fetch transcripts created before this date. Use ISO 8601 format YYYY-MM-DDTHH:mmZ. Timezone is UTC.
+      examples: ["2024-07-08T22:13Z"]
+      format: date-time
+      order: 4

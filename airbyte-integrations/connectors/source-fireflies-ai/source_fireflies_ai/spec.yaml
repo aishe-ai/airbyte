@@ -41,14 +41,14 @@ connectionSpecification:
     startDate:
       type: string
       title: Start Date (UTC)
-      description: Fetch transcripts created after this date. Use ISO 8601 format YYYY-MM-DDTHH:mmZ. Timezone is UTC.
+      description: Fetch transcripts created after this date. Leave empty to match everything. Use ISO 8601 format YYYY-MM-DDTHH:mmZ. Timezone is UTC.
       examples: ["2024-07-08T22:13Z"]
       format: date-time
       order: 3
     endDate:
       type: string
       title: End Date (UTC)
-      description: Fetch transcripts created before this date. Use ISO 8601 format YYYY-MM-DDTHH:mmZ. Timezone is UTC.
+      description: Fetch transcripts created before this date. Leave empty to match everything. Use ISO 8601 format YYYY-MM-DDTHH:mmZ. Timezone is UTC.
       examples: ["2024-07-08T22:13Z"]
       format: date-time
       order: 4

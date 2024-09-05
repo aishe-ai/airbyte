@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "sentences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "speaker_name": {
+            "type": "string"
+          },
+          "speaker_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "raw_text": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "number"
+          },
+          "end_time": {
+            "type": "number"
+          },
+          "ai_filters": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string"
+              },
+              "pricing": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "date_and_time": {
+                "type": "string"
+              },
+              "text_cleanup": {
+                "type": "string"
+              },
+              "sentiment": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "title": {
+      "type": "string"
+    },
+    "speakers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "host_email": {
+      "type": "string"
+    },
+    "organizer_email": {
+      "type": "string"
+    },
+    "meeting_info": {
+      "type": "object",
+      "properties": {
+        "fred_joined": {
+          "type": "boolean"
+        },
+        "silent_meeting": {
+          "type": "boolean"
+        },
+        "summary_status": {
+          "type": "string"
+        }
+      }
+    },
+    "calendar_id": {
+      "type": "string"
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "num_transcripts": {
+          "type": "integer"
+        },
+        "recent_meeting": {
+          "type": "string"
+        },
+        "minutes_consumed": {
+          "type": "number"
+        },
+        "is_admin": {
+          "type": "boolean"
+        },
+        "integrations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fireflies_users": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "transcript_url": {
+      "type": "string"
+    },
+    "audio_url": {
+      "type": "string"
+    },
+    "video_url": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "number"
+    },
+    "meeting_attendees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "gist": {
+          "type": "string"
+        },
+        "bullet_gist": {
+          "type": "string"
+        },
+        "short_overview": {
+          "type": "string"
+        },
+        "action_items": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "outline": {
+          "type": "string"
+        },
+        "overview": {
+          "type": "string"
+        },
+        "shorthand_bullet": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

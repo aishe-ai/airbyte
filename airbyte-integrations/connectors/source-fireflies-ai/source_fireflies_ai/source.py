@@ -5,202 +5,173 @@
 
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
-
 import requests
+
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthenticator
 
-"""
-TODO: Most comments in this class are instructive and should be deleted after the source is implemented.
-
-This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
-incremental syncs from an HTTP API.
-
-The various TODOs are both implementation hints and steps - fulfilling all the TODOs should be sufficient to implement one basic and one incremental
-stream from a source. This pattern is the same one used by Airbyte internally to implement connectors.
-
-The approach here is not authoritative, and devs are free to use their own judgement.
-
-There are additional required TODOs in the files within the integration_tests folder and the spec.yaml file.
-"""
+from datetime import datetime, timezone
 
 
-# Basic full refresh stream
+def format_datetime(dt_string):
+    dt = datetime.strptime(dt_string, "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
 class FirefliesAiStream(HttpStream, ABC):
-    """
-    TODO remove this comment
+    url_base = "https://api.fireflies.ai/graphql"
 
-    This class represents a stream output by the connector.
-    This is an abstract base class meant to contain all the common functionality at the API level e.g: the API base URL, pagination strategy,
-    parsing responses etc..
-
-    Each stream should extend this class (or another abstract subclass of it) to specify behavior unique to that stream.
-
-    Typically for REST APIs each stream corresponds to a resource in the API. For example if the API
-    contains the endpoints
-        - GET v1/customers
-        - GET v1/employees
-
-    then you should have three classes:
-    `class FirefliesAiStream(HttpStream, ABC)` which is the current class
-    `class Customers(FirefliesAiStream)` contains behavior to pull data for customers using v1/customers
-    `class Employees(FirefliesAiStream)` contains behavior to pull data for employees using v1/employees
-
-    If some streams implement incremental sync, it is typical to create another class
-    `class IncrementalFirefliesAiStream((FirefliesAiStream), ABC)` then have concrete stream implementations extend it. An example
-    is provided below.
-
-    See the reference docs for the full list of configurable options.
-    """
-
-    # TODO: Fill in the url base. Required.
-    url_base = "https://example-api.com/v1/"
+    def __init__(self, config: Mapping[str, Any], **kwargs):
+        super().__init__(**kwargs)
+        self.config = config
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        """
-        TODO: Override this method to define a pagination strategy. If you will not be using pagination, no action is required - just return None.
-
-        This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
-        to most other methods in this class to help you form headers, request bodies, query params, etc..
-
-        For example, if the API accepts a 'page' parameter to determine which page of the result to return, and a response from the API contains a
-        'page' number, then this method should probably return a dict {'page': response.json()['page'] + 1} to increment the page count by 1.
-        The request_params method should then read the input next_page_token and set the 'page' param to next_page_token['page'].
-
-        :param response: the most recent response from the API
-        :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
-                If there are no more pages in the result, return None.
-        """
+        data = response.json()
+        if len(data.get("data", {}).get("transcripts", [])) == 50:
+            return {"skip": response.request.body["variables"]["skip"] + 50}
         return None
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
-        """
-        TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-        """
         return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        """
-        TODO: Override this method to define how a response is parsed.
-        :return an iterable containing each record in the response
-        """
-        yield {}
+        data = response.json()
+        for transcript in data.get("data", {}).get("transcripts", []):
+            yield transcript
 
 
-class Customers(FirefliesAiStream):
-    """
-    TODO: Change class name to match the table/data source this stream corresponds to.
-    """
-
-    # TODO: Fill in the primary key. Required. This is usually a unique field in the stream, like an ID or a timestamp.
-    primary_key = "customer_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        TODO: Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "customers"
-
-
-# Basic incremental stream
-class IncrementalFirefliesAiStream(FirefliesAiStream, ABC):
-    """
-    TODO fill in details of this class to implement functionality related to incremental syncs for your connector.
-         if you do not need to implement incremental sync for any streams, remove this class.
-    """
-
-    # TODO: Fill in to checkpoint stream reads after N records. This prevents re-reading of data if the stream fails for any reason.
-    state_checkpoint_interval = None
-
-    @property
-    def cursor_field(self) -> str:
-        """
-        TODO
-        Override to return the cursor field used by this stream e.g: an API entity might always use created_at as the cursor field. This is
-        usually id or date based. This field's presence tells the framework this in an incremental stream. Required for incremental.
-
-        :return str: The name of the cursor field.
-        """
-        return []
-
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        """
-        Override to determine the latest state after reading the latest record. This typically compared the cursor_field from the latest record and
-        the current state and picks the 'most' recent cursor. This is how a stream's state is determined. Required for incremental.
-        """
-        return {}
-
-
-class Employees(IncrementalFirefliesAiStream):
-    """
-    TODO: Change class name to match the table/data source this stream corresponds to.
-    """
-
-    # TODO: Fill in the cursor_field. Required.
-    cursor_field = "start_date"
-
-    # TODO: Fill in the primary key. Required. This is usually a unique field in the stream, like an ID or a timestamp.
-    primary_key = "employee_id"
+class Transcripts(FirefliesAiStream):
+    primary_key = "id"
 
     def path(self, **kwargs) -> str:
+        return ""
+
+    def request_headers(self, **kwargs) -> Mapping[str, Any]:
+        return {"Content-Type": "application/json", "Authorization": f"Bearer {self.config['credentials']['api_key']}"}
+
+    def request_body_json(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> Optional[Mapping]:
+        query = """
+        query Transcripts($fromDate: DateTime, $toDate: DateTime, $hostEmail: [String], $participantEmail: [String], $limit: Int, $skip: Int) {
+          transcripts(
+            fromDate: $fromDate
+            toDate: $toDate
+            host_email: $hostEmail
+            participant_email: $participantEmail
+            limit: $limit
+            skip: $skip
+          ) {
+            id
+            sentences {
+              index
+              speaker_name
+              speaker_id
+              text
+              raw_text
+              start_time
+              end_time
+              ai_filters {
+                task
+                pricing
+                metric
+                question
+                date_and_time
+                text_cleanup
+                sentiment
+              }
+            }
+            title
+            speakers {
+              id
+              name
+            }
+            host_email
+            organizer_email
+            meeting_info {
+              fred_joined
+              silent_meeting
+              summary_status
+            }
+            calendar_id
+            user {
+              user_id
+              email
+              name
+              num_transcripts
+              recent_meeting
+              minutes_consumed
+              is_admin
+              integrations
+            }
+            fireflies_users
+            participants
+            date
+            transcript_url
+            audio_url
+            video_url
+            duration
+            meeting_attendees {
+              displayName
+              email
+              phoneNumber
+              name
+              location
+            }
+            summary {
+              gist
+              bullet_gist
+              short_overview
+              action_items
+              keywords
+              outline
+              overview
+              shorthand_bullet
+            }
+          }
+        }
         """
-        TODO: Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/employees then this should
-        return "single". Required.
-        """
-        return "employees"
 
-    def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, any]]]:
-        """
-        TODO: Optionally override this method to define this stream's slices. If slicing is not needed, delete this method.
+        variables = {}
+        # In the request_body_json method:
+        if self.config.get("startDate"):
+            variables["fromDate"] = format_datetime(self.config["startDate"])
+        if self.config.get("endDate"):
+            variables["toDate"] = format_datetime(self.config["endDate"])
+        if self.config.get("host_emails"):
+            variables["hostEmail"] = self.config["host_emails"]
+        if self.config.get("participant_emails"):
+            variables["participantEmail"] = self.config["participant_emails"]
+        variables["limit"] = 50
+        variables["skip"] = next_page_token.get("skip", 0) if next_page_token else 0
 
-        Slices control when state is saved. Specifically, state is saved after a slice has been fully read.
-        This is useful if the API offers reads by groups or filters, and can be paired with the state object to make reads efficient. See the "concepts"
-        section of the docs for more information.
+        request_body = {"query": query, "variables": variables}
+        print(request_body)
+        return request_body
 
-        The function is called before reading any records in a stream. It returns an Iterable of dicts, each containing the
-        necessary data to craft a request for a slice. The stream state is usually referenced to determine what slices need to be created.
-        This means that data in a slice is usually closely related to a stream's cursor_field and stream_state.
-
-        An HTTP request is made for each returned slice. The same slice can be accessed in the path, request_params and request_header functions to help
-        craft that specific request.
-
-        For example, if https://example-api.com/v1/employees offers a date query params that returns data for that particular day, one way to implement
-        this would be to consult the stream state object for the last synced date, then return a slice containing each date from the last synced date
-        till now. The request_params function would then grab the date from the stream_slice and make it part of the request by injecting it into
-        the date query param.
-        """
-        raise NotImplementedError("Implement stream slices or delete this method!")
+    def request_method(self) -> str:
+        return "POST"
 
 
-# Source
 class SourceFirefliesAi(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
-        """
-        TODO: Implement a connection check to validate that the user-provided config can be used to connect to the underlying API
-
-        See https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/source-stripe/source_stripe/source.py#L232
-        for an example.
-
-        :param config:  the user-input config object conforming to the connector's spec.yaml
-        :param logger:  logger object
-        :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
-        """
-        return True, None
+        try:
+            url = "https://api.fireflies.ai/graphql"
+            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {config['credentials']['api_key']}"}
+            query = "query { transcripts(limit: 1) { id } }"
+            response = requests.post(url, headers=headers, json={"query": query})
+            response.raise_for_status()
+            return True, None
+        except Exception as e:
+            return False, f"Connection test failed: {str(e)}"
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        """
-        TODO: Replace the streams below with your own streams.
-
-        :param config: A Mapping of the user input configuration as defined in the connector spec.
-        """
-        # TODO remove the authenticator if not required.
-        auth = TokenAuthenticator(token="api_key")  # Oauth2Authenticator is also available if you need oauth support
-        return [Customers(authenticator=auth), Employees(authenticator=auth)]
+        auth = TokenAuthenticator(token=config["credentials"]["api_key"])
+        return [Transcripts(authenticator=auth, config=config)]

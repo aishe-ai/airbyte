@@ -1,0 +1,62 @@
+# Ignore .env files and similar environment files
+*.env
+
+# Ignore other common sensitive files
+*.pem
+*.key
+*.cert
+
+# Ignore version control directories
+.git
+.gitignore
+.svn
+.hg
+
+# Ignore common backup files
+*~
+*.bak
+*.tmp
+*.swp
+
+# Ignore log files and directories
+logs
+*.log
+
+# Ignore node modules
+node_modules
+
+# Ignore build output directories
+dist
+build
+out
+.venv
+
+# Ignore IDE specific files and directories
+.vscode
+.idea
+*.sublime-workspace
+
+# Ignore secrets directory
+secrets
+
+# Ignore test and documentation files
+test
+tests
+docs
+# *.md
+
+# Ignore cache directories
+__pycache__
+*.pyc
+
+# Ignore local development files
+*.local
+
+# Ignore Docker files
+Dockerfile
+.dockerignore
+
+# Ignore CI/CD files
+.github
+.gitlab-ci.yml
+.travis.yml

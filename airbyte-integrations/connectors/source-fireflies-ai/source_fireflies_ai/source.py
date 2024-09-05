@@ -3,10 +3,13 @@
 #
 
 import requests
+import concurrent.futures
 
 from requests import Request, Session
 from datetime import datetime, timezone
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -151,17 +154,22 @@ query Transcripts(
             variables["fromDate"] = format_datetime(self.config["startDate"])
         if self.config.get("endDate"):
             variables["toDate"] = format_datetime(self.config["endDate"])
-        if self.config.get("host_emails"):
-            variables["hostEmail"] = self.config["host_emails"][0]
-        if self.config.get("participant_emails"):
-            variables["participantEmail"] = self.config["participant_emails"][0]
+        if stream_slice:
+            variables["hostEmail"] = stream_slice["hostEmail"]
+            variables["participantEmail"] = stream_slice["participantEmail"]
         variables["limit"] = 50
         variables["skip"] = next_page_token.get("skip", 0) if next_page_token else 0
 
         request_body = {"query": query, "variables": variables}
         return request_body
 
+    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        for host_email in self.config.get("host_emails", []):
+            for participant_email in self.config.get("participant_emails", []):
+                yield {"hostEmail": host_email, "participantEmail": participant_email}
+
     # overwrite needed because of fireflies api needs arent meet by base http class
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     def _fetch_next_page(
         self,
         stream_slice: Optional[Mapping[str, Any]] = None,
@@ -172,12 +180,10 @@ query Transcripts(
         headers = self.request_headers()
         json_body = self.request_body_json(stream_state, stream_slice, next_page_token)
 
-        # Prepare the request
         session = Session()
         request = Request(self.request_method(), url, headers=headers, json=json_body)
         prepared_request = session.prepare_request(request)
 
-        # Send the request
         response = session.send(prepared_request)
         response.raise_for_status()
 
@@ -202,3 +208,11 @@ class SourceFirefliesAi(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         auth = TokenAuthenticator(token=config["credentials"]["api_key"])
         return [Transcripts(authenticator=auth, config=config)]
+
+    def read_records(self, **kwargs) -> Iterable[Mapping[str, Any]]:
+        streams = self.streams(self.config)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(stream.read_records, **kwargs) for stream in streams]
+            for future in concurrent.futures.as_completed(futures):
+                for record in future.result():
+                    yield record

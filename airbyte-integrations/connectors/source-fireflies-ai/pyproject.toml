@@ -18,6 +18,7 @@ packages = [ { include = "source_fireflies_ai" }, {include = "main.py" } ]
 python = "^3.9,<3.12"
 airbyte-cdk = "^0"
 requests = "*"
+tenacity = "^9.0.0"
 
 [tool.poetry.scripts]
 source-fireflies-ai = "source_fireflies_ai.run:run"

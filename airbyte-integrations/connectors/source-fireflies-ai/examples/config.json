@@ -1,0 +1,12 @@
+{
+  "credentials": {
+    "api_key": "your_secret_api_key_here"
+  },
+  "host_emails": ["host1@example.com", "host2@example.com"],
+  "participant_emails": [
+    "participant1@example.com",
+    "participant2@example.com"
+  ],
+  "startDate": "2024-01-01T00:00Z",
+  "endDate": "2024-07-08T22:13Z"
+}
